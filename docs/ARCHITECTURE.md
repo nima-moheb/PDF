@@ -1,10 +1,31 @@
 # Architecture
 
-`report.json -> validate/scrub -> render independent page PDFs -> hash manifest -> merge -> preflight/render QA`
+`report.json -> strict schema -> semantic validation -> public scrub -> dependency fingerprints -> independent page render -> deterministic page hashes -> merge -> link checks -> render/preflight QA`
 
-Each page is an independent artifact under `pages/`. `--only PAGE_ID` re-renders only that page and reuses all other artifacts. This enables surgical corrections without collateral layout changes.
+## Determinism
 
-A structural change can legitimately invalidate dependent pages. Examples: inserting/removing a page changes page numbers; changing a section title may change a TOC. Ordinary page-local edits do not.
+ReportLab pages are generated in invariant mode. The final writer receives fixed metadata. Two clean builds from the same input and runtime contract are regression-tested for byte-identical page artifacts and merged PDFs.
+
+## Surgical rebuilds
+
+Each page is an independent artifact under `pages/`. `manifest.json` stores:
+
+- global fingerprint: metadata + ordered page structure + renderer/schema/theme/runtime contract
+- per-page input fingerprint
+- evidence image SHA-256 where applicable
+- artifact SHA-256
+
+With `--only PAGE_ID`:
+
+1. A changed global/runtime/structural fingerprint invalidates reuse and causes a full rebuild.
+2. A changed non-requested page or evidence file is automatically added to the render set.
+3. A missing/tampered artifact is automatically rebuilt.
+4. Unaffected artifacts remain byte-identical.
+
+## Final boundary QA
+
+After merge, PyMuPDF opens and renders every final page at 2x resolution. The preflight validates page count, A4 dimensions, renderability, non-blank raster output, extractable text, and text boxes staying inside the media box. PNGs and hashes are retained under `qa/` for human or future visual-regression inspection.
 
 ## Failure over fakery
-Build fails on missing required images, banned internal text, overflow, or fit violations. The renderer does not silently shrink normal content below its design contract and does not draw fake evidence placeholders.
+
+The build fails on malformed archetype content, banned internal text, missing evidence, overflow/fit violations, dead visible resume links, malformed table/chart data, or failed rendered QA. Normal content is never silently sliced to fit.
