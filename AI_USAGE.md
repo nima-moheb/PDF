@@ -1,27 +1,29 @@
 # AI Usage Contract
 
-This repository is a report compiler. The AI supplies structured content; the engine owns layout.
+This repository is a report compiler. The AI supplies semantic content; the engine owns presentation and verification.
 
 ## Absolute rules
-- A generated PDF is always a finished deliverable for another human.
-- Never include TODO, draft watermark, internal note, manager/CEO note, debug text, placeholder text, prompt text, reasoning, generator commentary, or instructions to Nima.
-- Do not invent coordinates, font sizes, margins, colors, header/footer geometry, or chart styling in report JSON.
-- Select approved archetypes and provide content only.
-- If content does not fit, treat the build error as feedback: shorten without losing meaning, split/expand into another page, or select another approved archetype. Never silently shrink normal text into unreadability.
-- A missing evidence/screenshot asset is a build failure. Never substitute decorative fake evidence.
-- Page 1 has no visible page number. Pages 2+ use deterministic header/footer components.
-- The approved cover is `variant: digital-wave`. Use `direction: auto` by default; Persian titles mirror to RTL automatically. Do not invent another cover design.
-- When revising one page, use `--only <page-id>` and verify unaffected page hashes are unchanged.
 
-## Visual identity
-- A4 portrait, Modern Digital.
-- Technical grid, controlled gradients/glow, rounded depth, strong hierarchy.
-- Theme variants: blue, green, purple, orange, red, graphite. Default: blue.
-- Latin: IBM Plex Sans. Persian: Vazirmatn where bootstrapped.
-- Mixed Persian/English/numbers/URLs must render correctly.
-- Personal identity: Nima Moheb. Resume: https://nima-moheb.github.io/myCV/
-- If a resume label is visible, it MUST be a real clickable PDF URI annotation. Link-looking dead text is a build failure.
-- Charts must communicate data, not decoration: line charts show x labels + point values; bar charts use clean single-body bars with value labels.
+- A generated PDF is always a finished deliverable for another human.
+- Never include TODO, draft watermark, internal/manager/CEO note, debug text, placeholder text, prompt text, reasoning, generator commentary, or instructions to Nima.
+- Do not provide coordinates, font sizes, margins, colors, table widths, per-card accents, header/footer overrides, or chart styling in report JSON. The strict schema rejects them.
+- Select approved archetypes and provide content only.
+- Never shorten content by slicing/truncating fields to make them fit. A `FIT_FAIL` means shorten without losing meaning, split content into another page, or choose another approved archetype.
+- Missing evidence/screenshot assets are build failures. Never substitute decorative fake evidence.
+- Evidence paths may be relative to the report JSON.
+- Page 1 has no visible page number. Pages 2+ use deterministic engine-owned navigation/footer components.
+- Use `--only <page-id>` for local corrections. The engine verifies whether surgery is actually safe and expands/invalidates it automatically when dependencies changed.
+- Do not treat source generation as success. A successful default build must pass final merged-PDF rendered QA and produce the `qa/` artifacts.
 
 ## Approved archetypes
+
 `cover`, `summary`, `text`, `cards`, `chart_text`, `comparison`, `table`, `image_text`, `timeline`, `sources`, `closing`.
+
+## Visual identity
+
+- A4 portrait, Modern Digital.
+- Themes: blue, green, purple, orange, red, graphite.
+- Latin: IBM Plex Sans when bootstrapped.
+- Persian: Vazirmatn when bootstrapped.
+- Mixed Persian/English/numbers/URLs must remain readable and atomic where appropriate.
+- Resume: https://nima-moheb.github.io/myCV/ and must be a real PDF URI annotation whenever visibly presented.
