@@ -1,4 +1,4 @@
-"""Fetch the approved font assets into the portable Report Engine font cache."""
+"""Fetch approved font assets into the portable Report Engine font cache."""
 from __future__ import annotations
 
 import os
