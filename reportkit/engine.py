@@ -319,6 +319,9 @@ def _wave_path(c, rtl, th):
 
 def cover(c, meta, p, th):
     """Selected cover #2: diagonal digital-wave composition, automatically mirrored for RTL."""
+    variant=p.get('variant','digital-wave')
+    if variant!='digital-wave':
+        raise ValueError(f'DESIGN_FAIL: unsupported cover variant {variant!r}')
     title=p.get('title',meta['title'])
     rtl=bool(p.get('direction')=='rtl' or (p.get('direction')!='ltr' and is_fa(title)))
     c.setFillColor(color(th['deep'])); c.rect(0,0,W,H,fill=1,stroke=0)
