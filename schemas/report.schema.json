@@ -1,108 +1,275 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "direction": {"enum": ["auto", "ltr", "rtl"]},
+    "summaryCard": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "value": {"type": ["string", "number" ]},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "infoCard": {
+      "type": "object",
+      "required": ["title", "text"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "comparisonItem": {
+      "type": "object",
+      "required": ["title", "bullets"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "value": {"type": ["string", "number"]},
+        "bullets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    },
+    "timelineItem": {
+      "type": "object",
+      "required": ["title", "text"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "textBlock": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "text"],
+          "properties": {
+            "kind": {"const": "heading"},
+            "text": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "text"],
+          "properties": {
+            "kind": {"const": "text"},
+            "text": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "items"],
+          "properties": {
+            "kind": {"const": "bullets"},
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {"type": "string", "minLength": 1}
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "coverPage": {
+      "type": "object",
+      "required": ["id", "type", "title"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "cover"},
+        "title": {"type": "string", "minLength": 1},
+        "subtitle": {"type": "string"},
+        "eyebrow": {"type": "string"},
+        "variant": {"const": "digital-wave"},
+        "direction": {"$ref": "#/$defs/direction"}
+      },
+      "additionalProperties": false
+    },
+    "summaryPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "intro", "cards"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "summary"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "intro": {"type": "string", "minLength": 1},
+        "cards": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"$ref": "#/$defs/summaryCard"}}
+      },
+      "additionalProperties": false
+    },
+    "textPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "blocks"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "text"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "blocks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/textBlock"}}
+      },
+      "additionalProperties": false
+    },
+    "cardsPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "cards"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "cards"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "cards": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"$ref": "#/$defs/infoCard"}}
+      },
+      "additionalProperties": false
+    },
+    "chartPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "chart", "analysis"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "chart_text"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "chart": {
+          "type": "object",
+          "required": ["type", "labels", "data"],
+          "properties": {
+            "type": {"enum": ["line", "bar"]},
+            "title": {"type": "string"},
+            "labels": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "minLength": 1}},
+            "data": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "number"}}
+          },
+          "additionalProperties": false
+        },
+        "analysis": {"type": "string", "minLength": 1},
+        "source": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "comparisonPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "items"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "comparison"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "items": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/comparisonItem"}}
+      },
+      "additionalProperties": false
+    },
+    "tablePage": {
+      "type": "object",
+      "required": ["id", "type", "title", "columns", "rows"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "table"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "columns": {"type": "array", "minItems": 2, "maxItems": 6, "items": {"type": "string", "minLength": 1}},
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 14,
+          "items": {"type": "array", "minItems": 2, "maxItems": 6, "items": {"type": ["string", "number", "boolean"]}}
+        }
+      },
+      "additionalProperties": false
+    },
+    "imagePage": {
+      "type": "object",
+      "required": ["id", "type", "title", "image", "text"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "image_text"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "image": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "timelinePage": {
+      "type": "object",
+      "required": ["id", "type", "title", "items"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "timeline"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "items": {"type": "array", "minItems": 1, "maxItems": 6, "items": {"$ref": "#/$defs/timelineItem"}}
+      },
+      "additionalProperties": false
+    },
+    "sourcesPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "items"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "sources"},
+        "title": {"type": "string", "minLength": 1},
+        "eyebrow": {"type": "string"},
+        "items": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "string", "minLength": 1}}
+      },
+      "additionalProperties": false
+    },
+    "closingPage": {
+      "type": "object",
+      "required": ["id", "type", "title", "text"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "type": {"const": "closing"},
+        "title": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
   "type": "object",
-  "required": [
-    "meta",
-    "pages"
-  ],
+  "required": ["meta", "pages"],
   "properties": {
     "meta": {
       "type": "object",
-      "required": [
-        "title",
-        "theme",
-        "author"
-      ],
+      "required": ["title", "theme", "author"],
       "properties": {
-        "title": {
-          "type": "string",
-          "minLength": 1
-        },
-        "subtitle": {
-          "type": "string"
-        },
-        "theme": {
-          "enum": [
-            "blue",
-            "green",
-            "purple",
-            "orange",
-            "red",
-            "graphite"
-          ]
-        },
-        "author": {
-          "type": "string",
-          "minLength": 1
-        },
-        "date": {
-          "type": "string"
-        },
-        "recipient": {
-          "type": "string"
-        },
-        "branding": {
-          "enum": [
-            "subtle",
-            "normal",
-            "prominent"
-          ]
-        }
+        "title": {"type": "string", "minLength": 1},
+        "subtitle": {"type": "string"},
+        "theme": {"enum": ["blue", "green", "purple", "orange", "red", "graphite"]},
+        "author": {"type": "string", "minLength": 1},
+        "date": {"type": "string"},
+        "recipient": {"type": "string"},
+        "branding": {"enum": ["subtle", "normal", "prominent"]}
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "pages": {
       "type": "array",
       "minItems": 1,
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "type"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9_-]+$"
-          },
-          "type": {
-            "enum": [
-              "cover",
-              "summary",
-              "text",
-              "cards",
-              "chart_text",
-              "comparison",
-              "table",
-              "image_text",
-              "timeline",
-              "sources",
-              "closing"
-            ]
-          },
-          "title": {
-            "type": "string"
-          },
-          "header": {
-            "type": "string"
-          },
-          "footer": {
-            "type": "string"
-          },
-          "direction": {
-            "enum": [
-              "auto",
-              "ltr",
-              "rtl"
-            ]
-          },
-          "variant": {
-            "enum": [
-              "digital-wave"
-            ]
-          }
-        },
-        "additionalProperties": true
+        "oneOf": [
+          {"$ref": "#/$defs/coverPage"},
+          {"$ref": "#/$defs/summaryPage"},
+          {"$ref": "#/$defs/textPage"},
+          {"$ref": "#/$defs/cardsPage"},
+          {"$ref": "#/$defs/chartPage"},
+          {"$ref": "#/$defs/comparisonPage"},
+          {"$ref": "#/$defs/tablePage"},
+          {"$ref": "#/$defs/imagePage"},
+          {"$ref": "#/$defs/timelinePage"},
+          {"$ref": "#/$defs/sourcesPage"},
+          {"$ref": "#/$defs/closingPage"}
+        ]
       }
     }
   },
