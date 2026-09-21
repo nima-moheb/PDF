@@ -26,4 +26,8 @@ This repository is a report compiler. The AI supplies semantic content; the engi
 - Latin: IBM Plex Sans when bootstrapped.
 - Persian: Vazirmatn when bootstrapped.
 - Mixed Persian/English/numbers/URLs must remain readable and atomic where appropriate.
-- Resume: https://nima-moheb.github.io/myCV/ and must be a real PDF URI annotation whenever visibly presented.
+- Normal-page footers do not show a resume control. On a closing page, the visible `nima-moheb.github.io/myCV/` URL itself is the clickable PDF URI annotation.
+
+## Cover selection
+
+Approved variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`. Use `signal-orbit` unless Nima selects another. All five mirror for RTL. Theme selection remains from the six approved palettes. `cover_showcase` mode is for visual comparison only; ordinary reports still contain exactly one cover.
