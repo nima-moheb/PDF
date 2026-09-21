@@ -1,6 +1,6 @@
 # Approved Page Archetypes
 
-- `cover`: title, subtitle, eyebrow, approved `digital-wave` variant and direction.
+- `cover`: title, subtitle, eyebrow, one of five approved cover variants, direction, and (showcase mode only) an approved palette override.
 - `summary`: intro + 1-4 metric cards.
 - `text`: structured heading/text/bullet blocks with measured group height.
 - `cards`: up to six semantic information cards.

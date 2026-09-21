@@ -11,7 +11,7 @@ from jsonschema import ValidationError, validate
 from pypdf import PdfReader
 from PIL import Image
 
-from reportkit.engine import SCHEMA, build, scrub
+from reportkit.engine import SCHEMA, _cover_meta_cells, build, scrub
 from reportkit.rtl import visual_runs, visual_rtl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,7 +76,7 @@ class EngineTests(unittest.TestCase):
             build(inp, td / "out/report.pdf")
             self.assertTrue((td / "out/qa/page-002.png").exists())
 
-    def test_resume_annotation_exists(self):
+    def test_closing_exposes_real_resume_url_without_view_resume_label(self):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "r.pdf"
             build(EXAMPLE, out)
@@ -89,6 +89,8 @@ class EngineTests(unittest.TestCase):
                     if action and action.get("/URI"):
                         urls.append(action.get("/URI"))
             self.assertIn("https://nima-moheb.github.io/myCV/", urls)
+            visible = "\n".join((page.extract_text() or "") for page in rd.pages)
+            self.assertNotIn("VIEW RESUME", visible.upper())
 
     def test_clean_builds_are_byte_identical(self):
         with tempfile.TemporaryDirectory() as td:
@@ -175,6 +177,23 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(len(qa["pages"]), 10)
             self.assertEqual(qa["pdf_sha256"], file_sha(out))
             self.assertTrue(all(p["ink_fraction"] > 0.006 for p in qa["pages"]))
+
+    def test_persian_cover_localizes_nima_author_identity(self):
+        meta = {"author": "Nima Moheb", "recipient": "کارفرما", "date": "شهریور ۱۴۰۵"}
+        self.assertEqual(_cover_meta_cells(meta, True)[2][1], "نیما محب")
+        self.assertEqual(_cover_meta_cells(meta, False)[0][1], "Nima Moheb")
+        fa = json.loads((ROOT / "examples/cover_showcase_fa.json").read_text())
+        self.assertEqual(fa["meta"]["author"], "نیما محب")
+
+    def test_cover_showcases_render_all_five_variants_in_ltr_and_rtl(self):
+        for name in ("cover_showcase_en.json", "cover_showcase_fa.json"):
+            src = ROOT / "examples" / name
+            with tempfile.TemporaryDirectory() as td:
+                out = Path(td) / "covers.pdf"
+                build(src, out)
+                rd = PdfReader(out)
+                self.assertEqual(len(rd.pages), 5)
+                self.assertTrue((Path(td) / "qa/page-005.png").exists())
 
     def test_persian_cover_auto_mirrors_and_builds(self):
         src = ROOT / "examples/persian_cover.json"
