@@ -218,3 +218,223 @@ def header_footer(c, meta, page, page_title, th, footer_override=None):
     footer=footer_override or 'Nima Moheb  //  Full Stack Developer'
     c.setFont('LatinB',6.9); c.setFillColor(color('#59687C')); c.drawString(SAFE_X,fy+1.7*MM,footer[:58])
     if meta.get('branding') in ('normal','prominent'):
+        label='RESUME  ↗'; c.setFont('LatinB',6.9); c.setFillColor(color(th['accent']))
+        rx=SAFE_X+78*MM; c.drawString(rx,fy+1.7*MM,label)
+        rw=pdfmetrics.stringWidth(label,'LatinB',6.9)
+        c.linkURL('https://nima-moheb.github.io/myCV/',(rx,fy,rx+rw,fy+4.2*MM),relative=0,thickness=0)
+    pw=30*MM; ph=7.2*MM; px=W-SAFE_X-pw; py=fy-.2*MM
+    round_rect(c,px,py,pw,ph,ph/2,fill=th['deep'])
+    c.setFont('LatinB',6.6); c.setFillColor(color(th['accent2'])); c.drawString(px+4*MM,py+2.5*MM,'PAGE')
+    c.setFont('LatinB',8.1); c.setFillColor(white); c.drawRightString(px+pw-4*MM,py+2.25*MM,f'{page:02d} / {total:02d}')
+
+
+def tech_grid(c, th, dark=False):
+    c.saveState(); c.setLineWidth(.25)
+    base = '#FFFFFF' if dark else th['accent']
+    c.setStrokeColor(color(base,.06 if dark else .045))
+    step=9*MM
+    x=0
+    while x<W: c.line(x,0,x,H); x+=step
+    y=0
+    while y<H: c.line(0,y,W,y); y+=step
+    if not dark:
+        cx=W-22*MM; cy=49*MM
+        c.setStrokeColor(color(th['accent'],.045)); c.setLineWidth(.8)
+        for rr in (18*MM,27*MM,36*MM): c.circle(cx,cy,rr,fill=0,stroke=1)
+        c.setFillColor(color(th['accent2'],.09))
+        for dx,dy in ((0,0),(-20*MM,8*MM),(10*MM,23*MM),(-8*MM,31*MM)): c.circle(cx+dx,cy+dy,1.5*MM,fill=1,stroke=0)
+    c.restoreState()
+
+
+def cover(c, meta, p, th):
+    # 2026 modern-digital cover: asymmetric depth, technical grid, controlled glow.
+    c.setFillColor(color(th['deep'])); c.rect(0,0,W,H,fill=1,stroke=0)
+    c.linearGradient(0,H*.15,W,H,[color(th['deep']),color(th['accent'])],[0,.78])
+    tech_grid(c,th,dark=True)
+    # large translucent architecture arcs
+    c.saveState(); c.setLineWidth(1.0)
+    for rr,a in [(78*MM,.11),(61*MM,.11),(44*MM,.10)]:
+        c.setStrokeColor(color(th['accent2'],a)); c.circle(W+8*MM,H-40*MM,rr,fill=0,stroke=1)
+    c.restoreState()
+    # gradient/glow modules
+    for cx,cy,r,a in [(W*.82,H*.75,34*MM,.14),(W*.73,H*.67,18*MM,.10),(W*.18,H*.18,22*MM,.10)]:
+        c.setFillColor(color(th['accent2'],a)); c.circle(cx,cy,r,fill=1,stroke=0)
+    # left identity rail
+    c.setFillColor(color(th['accent2'])); c.roundRect(16*MM,H-52*MM,2.2*MM,23*MM,1.1*MM,fill=1,stroke=0)
+    pill(c,p.get('eyebrow','REPORT'),21*MM,H-37*MM,42*MM,8.4*MM,th,dark=True)
+    c.setFont('LatinB',7); c.setFillColor(color('#CFE2FF')); c.drawRightString(W-17*MM,H-33*MM,'NIMA REPORT ENGINE  //  HUMAN-FACING OUTPUT')
+
+    title=p.get('title',meta['title']); rtl=is_fa(title)
+    font='FaB' if rtl else 'LatinB'; size=30.5 if rtl else 34.5
+    lines=wrap(title,font,size,W-38*MM,rtl)
+    if len(lines)>3: raise ValueError('FIT_FAIL: cover title too long')
+    y=H-69*MM
+    c.setFillColor(white)
+    for line in lines:
+        if rtl: c.setFont(font,size); c.drawRightString(W-18*MM,y,visual_rtl(line))
+        else: c.setFont(font,size); c.drawString(18*MM,y,line)
+        y-=size*1.18
+    glow_line(c,18*MM,y+3*MM,92*MM,y+3*MM,th,1.0)
+    subtitle=p.get('subtitle',meta.get('subtitle',''))
+    if subtitle:
+        y-=7*MM; draw_text(c,subtitle,18*MM,y,W-48*MM,size=11.7,colorv='#E9F2FF',max_lines=4)
+
+    # visual data module, decorative but report-like rather than ornamental
+    mx=18*MM; my=66*MM; mw=W-36*MM; mh=44*MM
+    round_rect(c,mx,my,mw,mh,15,fill='#FFFFFF',stroke='#FFFFFF',sw=.35,alpha=.10)
+    c.setFont('LatinB',6.8); c.setFillColor(color('#CFE2FF')); c.drawString(mx+7*MM,my+mh-9*MM,'REPORT SIGNAL')
+    bars=[.34,.49,.43,.65,.76,.92]
+    bw=8*MM; gap=6*MM; bx=mx+7*MM; base=my+11*MM
+    for i,v in enumerate(bars):
+        bh=20*MM*v
+        xx=bx+i*(bw+gap)
+        c.setFillColor(color(th['accent'])); c.roundRect(xx,base,bw,bh,bw/2,fill=1,stroke=0)
+        if bh>5*MM:
+            c.setFillColor(color(th['accent2'],.55)); c.roundRect(xx,base+bh*.68,bw,bh*.32,bw/2,fill=1,stroke=0)
+    c.setFillColor(color('#D9E8FF')); c.setFont('Latin',7); c.drawRightString(mx+mw-8*MM,my+13*MM,'STRUCTURED  /  TRACEABLE  /  FINAL')
+
+    # metadata strip
+    yb=18*MM; gap=4*MM; cw=(W-32*MM-gap*2)/3
+    cells=[('Prepared by',meta.get('author','Nima Moheb')),('Date',meta.get('date','')),('For',meta.get('recipient',''))]
+    for i,(lab,val) in enumerate(cells):
+        x=16*MM+i*(cw+gap)
+        round_rect(c,x,yb,cw,27*MM,10,fill='#FFFFFF',stroke='#FFFFFF',sw=.3,alpha=.11)
+        c.setFillColor(color('#CFE2FF')); c.setFont('LatinB',6.8); c.drawString(x+5*MM,yb+18.5*MM,lab.upper())
+        font='FaUI' if is_fa(val) else 'LatinB'; c.setFont(font,9.5); c.setFillColor(white)
+        if is_fa(val): c.drawRightString(x+cw-5*MM,yb+9.3*MM,visual_rtl(val))
+        else: c.drawString(x+5*MM,yb+9.3*MM,val[:23])
+
+
+def page_title(c,title,eyebrow,th,y=H-30*MM):
+    c.setFillColor(color(th['accent'])); c.setFont('LatinB',7.4); c.drawString(SAFE_X,y+8*MM,eyebrow.upper())
+    draw_text(c,title,SAFE_X,y,W-2*SAFE_X,size=21.5,bold=True,max_lines=2)
+    return y-13*MM
+
+
+def summary(c,meta,p,th,page):
+    header_footer(c,meta,page,p.get('title','Summary'),th,p.get('footer'))
+    tech_grid(c,th); y=page_title(c,p['title'],p.get('eyebrow','Overview'),th)
+    intro=p.get('intro',''); y=draw_text(c,intro,SAFE_X,y,W-2*SAFE_X,size=10.8,max_lines=5)
+    y-=8*MM
+    cards=p.get('cards',[])[:4]; gap=6*MM; w=(W-2*SAFE_X-gap)/2; h=59*MM
+    for i,card in enumerate(cards):
+        col=i%2; row=i//2; x=SAFE_X+col*(w+gap); yy=y-row*(h+gap)-h
+        shadow_card(c,x,yy,w,h,12,accent=th['accent'])
+        val=str(card.get('value','')); lab=str(card.get('label','')); note=str(card.get('note',''))
+        c.setFillColor(color(th['deep'])); c.setFont('LatinB',24); c.drawString(x+6*MM,yy+h-13*MM,val)
+        draw_text(c,lab,x+6*MM,yy+h-24*MM,w-12*MM,size=10,bold=True,max_lines=2)
+        if note: draw_text(c,note,x+6*MM,yy+9*MM,w-12*MM,size=8.4,colorv='#6E7D92',max_lines=2)
+
+
+def text_page(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Report'),th)
+    blocks=p.get('blocks',[])
+    groups=[]; current={'title':'','content':[]}
+    for block in blocks:
+        if block.get('kind')=='heading':
+            if current['title'] or current['content']: groups.append(current)
+            current={'title':block.get('text',''),'content':[]}
+        else: current['content'].append(block)
+    if current['title'] or current['content']: groups.append(current)
+    if not groups: return
+    gap=5*MM; bottom=30*MM; tw=W-2*SAFE_X-14*MM
+    required=[max(34*MM,_measure_group(g,tw)) for g in groups]
+    available=y-bottom-gap*(len(groups)-1)
+    if sum(required)>available: raise ValueError(f'FIT_FAIL: text groups need {sum(required)/MM:.1f}mm, have {available/MM:.1f}mm on {p["id"]}')
+    # Extra room is distributed gently, avoiding a short card occupying a third of a page.
+    extra=available-sum(required); bonus=min(extra/max(len(groups),1),10*MM)
+    heights=[h+bonus for h in required]
+    top=y
+    for gi,(g,card_h) in enumerate(zip(groups,heights)):
+        yy=top-card_h
+        shadow_card(c,SAFE_X,yy,W-2*SAFE_X,card_h,13,accent=th['accent'] if gi==0 else None)
+        tx=SAFE_X+7*MM; cy=top-10*MM
+        if g['title']:
+            cy=draw_text(c,g['title'],tx,cy,tw,size=14.7,bold=True,max_lines=2); cy-=4*MM
+        for block in g['content']:
+            kind=block.get('kind','text')
+            if kind=='text':
+                cy=draw_text(c,block['text'],tx,cy,tw,size=10.9,max_lines=12); cy-=3.5*MM
+            elif kind=='bullets':
+                for item in block.get('items',[]):
+                    rtl=is_fa(item); bx=tx+5*MM; bw=tw-7*MM
+                    dotx=tx+tw-1.8*MM if rtl else tx+1.6*MM
+                    c.setFillColor(color(th['accent'])); c.circle(dotx,cy+1.4,1.35,fill=1,stroke=0)
+                    cy=draw_text(c,item,bx,cy,bw,size=10.2,max_lines=4); cy-=2.5*MM
+        if cy < yy+6*MM: raise ValueError(f'FIT_FAIL: text group overflow on page {p["id"]}')
+        top=yy-gap
+
+
+def cards_page(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Highlights'),th)
+    cards=p.get('cards',[])[:6]; cols=2; gap=5*MM; w=(W-2*SAFE_X-gap)/2; h=45*MM
+    for i,card in enumerate(cards):
+        x=SAFE_X+(i%cols)*(w+gap); yy=y-(i//cols)*(h+gap)-h
+        shadow_card(c,x,yy,w,h,13,accent=card.get('accent',th['accent']))
+        draw_text(c,card.get('title',''),x+6*MM,yy+h-10*MM,w-12*MM,size=11.2,bold=True,max_lines=2)
+        draw_text(c,card.get('text',''),x+6*MM,yy+h-23*MM,w-12*MM,size=9,max_lines=5,colorv='#536174')
+
+
+def chart_text(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Data'),th)
+    chart=p.get('chart',{}); data=chart.get('data',[]); labels=chart.get('labels',[])
+    box_x=SAFE_X; box_y=74*MM; box_w=W-2*SAFE_X; box_h=105*MM
+    shadow_card(c,box_x,box_y,box_w,box_h,14)
+    c.setFillColor(color('#536174')); c.setFont('LatinB',8); c.drawString(box_x+7*MM,box_y+box_h-11*MM,chart.get('title','TREND').upper())
+    if not data: data=[1]
+    maxv=max(data)*1.12; left=box_x+12*MM; bottom=box_y+18*MM; gw=box_w-24*MM; gh=box_h-38*MM
+    c.setStrokeColor(color('#CFD9E7')); c.setLineWidth(.45)
+    for i in range(5):
+        yy=bottom+i*gh/4; c.line(left,yy,left+gw,yy)
+    if chart.get('type','line')=='bar':
+        bw=gw/max(len(data)*1.8,1)
+        for i,v in enumerate(data):
+            x=left+(i+.35)*gw/len(data); h=gh*v/maxv
+            c.setFillColor(color(th['accent'])); c.roundRect(x,bottom,bw,h,bw/2,fill=1,stroke=0)
+            if h>4*MM:
+                c.setFillColor(color(th['accent2'],.55)); c.roundRect(x,bottom+h*.72,bw,h*.28,bw/2,fill=1,stroke=0)
+            if i < len(labels): c.setFillColor(color('#69778A')); c.setFont('Latin',7); c.drawCentredString(x+bw/2,bottom-10,labels[i][:10])
+    else:
+        pts=[]
+        for i,v in enumerate(data): pts.append((left+i*gw/max(len(data)-1,1),bottom+gh*v/maxv))
+        c.setStrokeColor(color(th['accent'])); c.setLineWidth(2.3)
+        for a,b in zip(pts,pts[1:]): c.line(a[0],a[1],b[0],b[1])
+        for x,yy in pts:
+            c.setFillColor(color(th['accent2'])); c.circle(x,yy,3.4,fill=1,stroke=0)
+            c.setFillColor(color(th['accent'])); c.circle(x,yy,1.8,fill=1,stroke=0)
+    # analysis card
+    ay=31*MM; ah=34*MM
+    round_rect(c,SAFE_X,ay,W-2*SAFE_X,ah,12,fill=th['soft'],stroke=th['accent'],sw=.5)
+    draw_text(c,p.get('analysis',''),SAFE_X+6*MM,ay+ah-9*MM,W-2*SAFE_X-12*MM,size=9.4,max_lines=6)
+    source=p.get('source')
+    if source:
+        c.setFont('Latin',7); c.setFillColor(color('#7A8798')); c.drawString(SAFE_X,24*MM,'Source: '+source[:120])
+
+
+def comparison(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Comparison'),th)
+    items=p.get('items',[])[:3]; gap=5*MM; w=(W-2*SAFE_X-gap*(len(items)-1))/max(len(items),1); h=120*MM
+    for i,it in enumerate(items):
+        x=SAFE_X+i*(w+gap); yy=y-h
+        shadow_card(c,x,yy,w,h,14,accent=it.get('accent',th['accent']))
+        c.setFillColor(color(it.get('accent',th['accent']))); c.circle(x+w-8*MM,yy+h-10*MM,4*MM,fill=1,stroke=0)
+        draw_text(c,it.get('title',''),x+6*MM,yy+h-12*MM,w-18*MM,size=11.2,bold=True,max_lines=2)
+        if it.get('value'):
+            c.setFont('LatinB',20); c.setFillColor(color(th['deep'])); c.drawString(x+6*MM,yy+h-30*MM,str(it['value']))
+        by=yy+h-44*MM
+        for bullet in it.get('bullets',[]):
+            by=draw_text(c,'• '+bullet,x+6*MM,by,w-12*MM,size=8.6,max_lines=3); by-=3*MM
+
+
+def table_page(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Table'),th)
+    cols=p.get('columns',[]); rows=p.get('rows',[])
+    if not cols or not rows: return
+    x=SAFE_X; total=W-2*SAFE_X; widths=p.get('widths') or [1/len(cols)]*len(cols)
+    s=sum(widths); widths=[total*v/s for v in widths]
+    rh=13*MM; hh=14*MM
