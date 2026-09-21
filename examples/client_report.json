@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "title": "SEO & Web Performance Report",
+    "subtitle": "A compact review of visibility, technical progress, and the next growth window.",
+    "theme": "blue",
+    "author": "Nima Moheb",
+    "date": "September 2026",
+    "recipient": "Client / CEO",
+    "branding": "normal"
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "eyebrow": "PERFORMANCE REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "title": "The month in one view",
+      "intro": "The strongest movement came from better technical stability and stronger ownership of high-value pages. The report is deliberately concise: what changed, what the numbers show, and where the next gains are likely to come from.",
+      "cards": [
+        {"label": "Organic clicks", "value": "+42.6%", "note": "Month-over-month growth"},
+        {"label": "Indexed pages", "value": "145", "note": "Coverage verified"},
+        {"label": "Mobile LCP", "value": "1.98s", "note": "Target page median"},
+        {"label": "Priority actions closed", "value": "8 / 10", "note": "Two items moved to next cycle"}
+      ]
+    },
+    {
+      "id": "narrative",
+      "type": "text",
+      "title": "What actually changed",
+      "eyebrow": "Delivery",
+      "blocks": [
+        {"kind": "heading", "text": "Technical foundation"},
+        {"kind": "text", "text": "The technical layer was stabilized first so later SEO work would not sit on top of avoidable performance and indexing noise. Rendering, crawlability, page ownership and internal linking were checked together rather than treated as unrelated tasks."},
+        {"kind": "heading", "text": "Search work"},
+        {"kind": "bullets", "items": [
+          "High-value pages received stronger contextual internal links.",
+          "Indexation checks were normalized so stale historical URLs stopped looking like active problems.",
+          "The reporting layer now separates actual movement from migration residue and old-site noise.",
+          "Core Web Vitals stayed inside the acceptable operating range while content changes were deployed."
+        ]},
+        {"kind": "heading", "text": "Why this matters"},
+        {"kind": "text", "text": "The result is a cleaner base for future ranking work. Instead of spending the next cycle debugging infrastructure, effort can move toward authority, content depth, and external signals."}
+      ]
+    },
+    {
+      "id": "trend",
+      "type": "chart_text",
+      "title": "Visibility trend",
+      "chart": {
+        "type": "line",
+        "title": "SEARCH VISIBILITY INDEX",
+        "labels": ["W1","W2","W3","W4","W5","W6"],
+        "data": [34,39,46,51,61,72]
+      },
+      "analysis": "The important signal is not the last data point by itself; it is the consistency of the slope after the technical changes. The line moved upward without a matching increase in crawl errors or performance regressions.",
+      "source": "Google Search Console and internal technical monitoring - September 2026"
+    },
+    {
+      "id": "comparison",
+      "type": "comparison",
+      "title": "Before, now, and the next target",
+      "items": [
+        {"title": "Previous state", "value": "13-15", "bullets": ["Unstable exact-query position","Legacy URLs still visible in diagnostics","Authority distributed across old content"]},
+        {"title": "Current state", "value": "9-11", "bullets": ["Cleaner ownership signals","Stable performance baseline","Internal authority concentrated on target pages"]},
+        {"title": "Next window", "value": "Top 5", "bullets": ["External authority work","Evidence-rich content expansion","Continue targeted crawl and SERP monitoring"]}
+      ]
+    },
+    {
+      "id": "table",
+      "type": "table",
+      "title": "Priority work log",
+      "columns": ["Work item","Status","Impact","Next move"],
+      "widths": [0.38,0.17,0.19,0.26],
+      "rows": [
+        ["Internal-link intervention","Complete","High","Monitor target queries"],
+        ["Indexation normalization","Complete","Medium","No further cleanup"],
+        ["Mobile performance pass","Complete","High","Protect baseline"],
+        ["Reportage backlink 1","Planned","High","Publish next cycle"],
+        ["Case evidence section","In progress","High","Add approved cases"],
+        ["Local/entity citations","In progress","Medium","Finish profiles"]
+      ]
+    },
+    {
+      "id": "timeline",
+      "type": "timeline",
+      "title": "Next cycle",
+      "items": [
+        {"title": "1. Protect the baseline", "text": "Verify that current ranking and performance improvements remain stable after the latest crawl cycle."},
+        {"title": "2. Add external authority", "text": "Publish the first high-quality external placement and verify indexation and contextual relevance."},
+        {"title": "3. Expand evidence", "text": "Add approved successful-case material where it directly strengthens trust and topical depth."},
+        {"title": "4. Re-measure", "text": "Compare exact-query movement, impressions, CTR and landing-page ownership against this baseline."}
+      ]
+    },
+    {
+      "id": "rtl",
+      "type": "text",
+      "title": "نمونه صفحه فارسی و متن ترکیبی",
+      "eyebrow": "RTL + MIXED CONTENT",
+      "blocks": [
+        {"kind": "text", "text": "در این دوره، رشد کلیک ارگانیک ادامه پیدا کرد و داده های Google Search Console نشان می دهد که صفحه example.com/patent مالکیت بهتری روی عبارت هدف پیدا کرده است. در همین بازه، Laravel 13.19 و Core Web Vitals نیز بدون افت محسوس پایدار ماندند."},
+        {"kind": "heading", "text": "نکته مهم در طراحی"},
+        {"kind": "bullets", "items": [
+          "عبارت های انگلیسی مثل Google Search Console باید در متن فارسی به هم نریزند.",
+          "عددهایی مثل 42.6%، آدرس example.com و نسخه Laravel 13.19 باید خوانا باقی بمانند.",
+          "اندازه متن نباید برای جا شدن صفحه به شکل نامحسوس کوچک شود.",
+          "اگر محتوا جا نشد، موتور باید خطای fit بدهد تا چت متن را کوتاه کند یا صفحه را تقسیم کند."
+        ]},
+        {"kind": "text", "text": "هدف این صفحه این است که قبل از هر استفاده واقعی، مشکل RTL و متن دو زبانه را به عنوان یک تست اجباری ببینیم، نه چیزی که بعداً در نسخه نهایی کشف شود."}
+      ]
+    },
+    {
+      "id": "sources",
+      "type": "sources",
+      "title": "Sources",
+      "items": [
+        "Google Search Console - query and landing-page performance, September 2026.",
+        "Internal technical monitoring - Core Web Vitals and crawl verification.",
+        "Deployment and implementation records used to confirm completed technical work.",
+        "All figures in this demonstration are illustrative engine-test content, not a live client statement."
+      ]
+    },
+    {
+      "id": "closing",
+      "type": "closing",
+      "title": "Clear work. Clear evidence. No report noise.",
+      "text": "The report system is designed to make the useful information easier to read, not to fill pages with decoration. When more detail is needed, the document grows. When less is needed, the composition changes instead of inventing filler."
+    }
+  ]
+}
