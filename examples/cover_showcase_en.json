@@ -10,10 +10,55 @@
     "branding": "subtle"
   },
   "pages": [
-    {"id":"signal-orbit","type":"cover","variant":"signal-orbit","theme":"blue","direction":"ltr","eyebrow":"PERFORMANCE REPORT","title":"SEO & Web Performance - September 2026","subtitle":"Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."},
-    {"id":"glass-panel","type":"cover","variant":"glass-panel","theme":"purple","direction":"ltr","eyebrow":"EXECUTIVE REPORT","title":"SEO & Web Performance - September 2026","subtitle":"Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."},
-    {"id":"aurora-strata","type":"cover","variant":"aurora-strata","theme":"green","direction":"ltr","eyebrow":"DIGITAL REPORT","title":"SEO & Web Performance - September 2026","subtitle":"Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."},
-    {"id":"constellation","type":"cover","variant":"constellation","theme":"orange","direction":"ltr","eyebrow":"ANALYSIS / REPORT","title":"SEO & Web Performance - September 2026","subtitle":"Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."},
-    {"id":"editorial-split","type":"cover","variant":"editorial-split","theme":"graphite","direction":"ltr","eyebrow":"CLIENT REPORT","title":"SEO & Web Performance - September 2026","subtitle":"Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."}
+    {
+      "id": "signal-orbit",
+      "type": "cover",
+      "variant": "signal-orbit",
+      "theme": "blue",
+      "direction": "ltr",
+      "eyebrow": "PERFORMANCE REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    },
+    {
+      "id": "glass-panel",
+      "type": "cover",
+      "variant": "glass-panel",
+      "theme": "purple",
+      "direction": "ltr",
+      "eyebrow": "EXECUTIVE REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    },
+    {
+      "id": "aurora-strata",
+      "type": "cover",
+      "variant": "aurora-strata",
+      "theme": "green",
+      "direction": "ltr",
+      "eyebrow": "DIGITAL REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    },
+    {
+      "id": "constellation",
+      "type": "cover",
+      "variant": "constellation",
+      "theme": "orange",
+      "direction": "ltr",
+      "eyebrow": "ANALYSIS / REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    },
+    {
+      "id": "editorial-split",
+      "type": "cover",
+      "variant": "editorial-split",
+      "theme": "graphite",
+      "direction": "ltr",
+      "eyebrow": "CLIENT REPORT",
+      "title": "SEO & Web Performance - September 2026",
+      "subtitle": "Technical progress, search visibility, delivery status, and measurable outcomes in one concise report."
+    }
   ]
 }

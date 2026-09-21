@@ -52,17 +52,35 @@
       "title": "What actually changed",
       "eyebrow": "Delivery",
       "blocks": [
-        {"kind": "heading", "text": "Technical foundation"},
-        {"kind": "text", "text": "The technical layer was stabilized first so later SEO work would not sit on top of avoidable performance and indexing noise. Rendering, crawlability, page ownership and internal linking were checked together rather than treated as unrelated tasks."},
-        {"kind": "heading", "text": "Search work"},
-        {"kind": "bullets", "items": [
-          "High-value pages received stronger contextual internal links.",
-          "Indexation checks were normalized so stale historical URLs stopped looking like active problems.",
-          "The reporting layer now separates actual movement from migration residue and old-site noise.",
-          "Core Web Vitals stayed inside the acceptable operating range while content changes were deployed."
-        ]},
-        {"kind": "heading", "text": "Why this matters"},
-        {"kind": "text", "text": "The result is a cleaner base for future ranking work. Instead of spending the next cycle debugging infrastructure, effort can move toward authority, content depth, and external signals."}
+        {
+          "kind": "heading",
+          "text": "Technical foundation"
+        },
+        {
+          "kind": "text",
+          "text": "The technical layer was stabilized first so later SEO work would not sit on top of avoidable performance and indexing noise. Rendering, crawlability, page ownership and internal linking were checked together rather than treated as unrelated tasks."
+        },
+        {
+          "kind": "heading",
+          "text": "Search work"
+        },
+        {
+          "kind": "bullets",
+          "items": [
+            "High-value pages received stronger contextual internal links.",
+            "Indexation checks were normalized so stale historical URLs stopped looking like active problems.",
+            "The reporting layer now separates actual movement from migration residue and old-site noise.",
+            "Core Web Vitals stayed inside the acceptable operating range while content changes were deployed."
+          ]
+        },
+        {
+          "kind": "heading",
+          "text": "Why this matters"
+        },
+        {
+          "kind": "text",
+          "text": "The result is a cleaner base for future ranking work. Instead of spending the next cycle debugging infrastructure, effort can move toward authority, content depth, and external signals."
+        }
       ]
     },
     {
@@ -72,8 +90,22 @@
       "chart": {
         "type": "line",
         "title": "SEARCH VISIBILITY INDEX",
-        "labels": ["W1", "W2", "W3", "W4", "W5", "W6"],
-        "data": [34, 39, 46, 51, 61, 72]
+        "labels": [
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6"
+        ],
+        "data": [
+          34,
+          39,
+          46,
+          51,
+          61,
+          72
+        ]
       },
       "analysis": "The important signal is not the last data point by itself; it is the consistency of the slope after the technical changes. The line moved upward without a matching increase in crawl errors or performance regressions.",
       "source": "Google Search Console and internal technical monitoring - September 2026"
@@ -116,14 +148,49 @@
       "id": "table",
       "type": "table",
       "title": "Priority work log",
-      "columns": ["Work item", "Status", "Impact", "Next move"],
+      "columns": [
+        "Work item",
+        "Status",
+        "Impact",
+        "Next move"
+      ],
       "rows": [
-        ["Internal-link intervention", "Complete", "High", "Monitor target queries"],
-        ["Indexation normalization", "Complete", "Medium", "No further cleanup"],
-        ["Mobile performance pass", "Complete", "High", "Protect baseline"],
-        ["Reportage backlink 1", "Planned", "High", "Publish next cycle"],
-        ["Case evidence section", "In progress", "High", "Add approved cases"],
-        ["Local/entity citations", "In progress", "Medium", "Finish profiles"]
+        [
+          "Internal-link intervention",
+          "Complete",
+          "High",
+          "Monitor target queries"
+        ],
+        [
+          "Indexation normalization",
+          "Complete",
+          "Medium",
+          "No further cleanup"
+        ],
+        [
+          "Mobile performance pass",
+          "Complete",
+          "High",
+          "Protect baseline"
+        ],
+        [
+          "Reportage backlink 1",
+          "Planned",
+          "High",
+          "Publish next cycle"
+        ],
+        [
+          "Case evidence section",
+          "In progress",
+          "High",
+          "Add approved cases"
+        ],
+        [
+          "Local/entity citations",
+          "In progress",
+          "Medium",
+          "Finish profiles"
+        ]
       ]
     },
     {
@@ -131,10 +198,22 @@
       "type": "timeline",
       "title": "Next cycle",
       "items": [
-        {"title": "1. Protect the baseline", "text": "Verify that current ranking and performance improvements remain stable after the latest crawl cycle."},
-        {"title": "2. Add external authority", "text": "Publish the first high-quality external placement and verify indexation and contextual relevance."},
-        {"title": "3. Expand evidence", "text": "Add approved successful-case material where it directly strengthens trust and topical depth."},
-        {"title": "4. Re-measure", "text": "Compare exact-query movement, impressions, CTR and landing-page ownership against this baseline."}
+        {
+          "title": "1. Protect the baseline",
+          "text": "Verify that current ranking and performance improvements remain stable after the latest crawl cycle."
+        },
+        {
+          "title": "2. Add external authority",
+          "text": "Publish the first high-quality external placement and verify indexation and contextual relevance."
+        },
+        {
+          "title": "3. Expand evidence",
+          "text": "Add approved successful-case material where it directly strengthens trust and topical depth."
+        },
+        {
+          "title": "4. Re-measure",
+          "text": "Compare exact-query movement, impressions, CTR and landing-page ownership against this baseline."
+        }
       ]
     },
     {
@@ -143,15 +222,27 @@
       "title": "نمونه صفحه فارسی و متن ترکیبی",
       "eyebrow": "RTL + MIXED CONTENT",
       "blocks": [
-        {"kind": "text", "text": "در این دوره، رشد کلیک ارگانیک ادامه پیدا کرد و داده های Google Search Console نشان می دهد که صفحه example.com/patent مالکیت بهتری روی عبارت هدف پیدا کرده است. در همین بازه، Laravel 13.19 و Core Web Vitals نیز بدون افت محسوس پایدار ماندند."},
-        {"kind": "heading", "text": "نکته مهم در طراحی"},
-        {"kind": "bullets", "items": [
-          "عبارت های انگلیسی مثل Google Search Console باید در متن فارسی به هم نریزند.",
-          "عددهایی مثل 42.6%، آدرس example.com و نسخه Laravel 13.19 باید خوانا باقی بمانند.",
-          "اندازه متن نباید برای جا شدن صفحه به شکل نامحسوس کوچک شود.",
-          "اگر محتوا جا نشد، موتور باید خطای fit بدهد تا چت متن را کوتاه کند یا صفحه را تقسیم کند."
-        ]},
-        {"kind": "text", "text": "هدف این صفحه این است که قبل از هر استفاده واقعی، مشکل RTL و متن دو زبانه را به عنوان یک تست اجباری ببینیم، نه چیزی که بعداً در نسخه نهایی کشف شود."}
+        {
+          "kind": "text",
+          "text": "در این دوره، رشد کلیک ارگانیک ادامه پیدا کرد و داده های Google Search Console نشان می دهد که صفحه example.com/patent مالکیت بهتری روی عبارت هدف پیدا کرده است. در همین بازه، Laravel 13.19 و Core Web Vitals نیز بدون افت محسوس پایدار ماندند."
+        },
+        {
+          "kind": "heading",
+          "text": "نکته مهم در طراحی"
+        },
+        {
+          "kind": "bullets",
+          "items": [
+            "عبارت های انگلیسی مثل Google Search Console باید در متن فارسی به هم نریزند.",
+            "عددهایی مثل 42.6%، آدرس example.com و نسخه Laravel 13.19 باید خوانا باقی بمانند.",
+            "اندازه متن نباید برای جا شدن صفحه به شکل نامحسوس کوچک شود.",
+            "اگر محتوا جا نشد، موتور باید خطای fit بدهد تا چت متن را کوتاه کند یا صفحه را تقسیم کند."
+          ]
+        },
+        {
+          "kind": "text",
+          "text": "هدف این صفحه این است که قبل از هر استفاده واقعی، مشکل RTL و متن دو زبانه را به عنوان یک تست اجباری ببینیم، نه چیزی که بعداً در نسخه نهایی کشف شود."
+        }
       ]
     },
     {

@@ -9,6 +9,8 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - A4 portrait.
 - Modern Digital: technical grid, asymmetric composition, controlled gradients/glow, rounded depth, strong hierarchy.
 - Page 1 uses one approved cover variant and no visible page number. Approved variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`; all mirror for RTL.
+- Cover variants are selected semantically: signal-orbit for technical/data work; glass-panel for executive/business delivery; aurora-strata for innovation/technology; constellation for strategy/research/connected evidence; editorial-split for formal/document-heavy work. The mapping is guidance, not a hard restriction.
+- Persian/RTL cover metadata displays Nima's name as `نیما محب`; this localization is enforced by the renderer.
 - Pages 2+ use the same engine-owned navigation header and identity footer.
 - Same geometry across coordinated blue, green, purple, orange, red, and graphite palettes.
 

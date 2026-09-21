@@ -60,4 +60,18 @@ See `AI_USAGE.md`, `docs/DESIGN_SYSTEM.md`, `docs/COMPONENTS.md`, and `docs/ARCH
 
 ## Cover system
 
-Five engine-owned variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`. `signal-orbit` is the default. `meta.mode: "cover_showcase"` exists only for engine-generated comparison PDFs.
+Five permanent production variants are included: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, and `editorial-split`. All five render through the same production engine and all five mirror for Persian/RTL. The Persian showcase is not a separate fake template set; it is the RTL rendering of the same five engine variants.
+
+The report-generating chat chooses a cover from content and audience rather than always using one default:
+
+- `signal-orbit` — technical / analytics / performance / engineering
+- `glass-panel` — executive / client / business / proposals
+- `aurora-strata` — innovation / AI / product / future-facing technology
+- `constellation` — strategy / research / roadmaps / connected evidence
+- `editorial-split` — formal research / finance / legal-policy / document-heavy work
+
+For Persian/RTL covers, Nima's displayed author name is always **نیما محب**. Theme selection remains independent from cover geometry. `meta.mode: "cover_showcase"` exists only for engine-generated comparison PDFs.
+
+## Default ChatGPT workflow
+
+This repository is the default PDF-report pipeline for Nima. When a chat has the report content, it should structure the content as report JSON, choose an appropriate cover and palette, build with the repo, pass rendered QA, inspect output where visual judgment matters, and deliver the resulting PDF. It should not bypass the repo with an ad-hoc PDF implementation unless Nima explicitly asks for a different pipeline. The operational contract is in `AI_USAGE.md`.
