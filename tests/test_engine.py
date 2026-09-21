@@ -36,6 +36,12 @@ class EngineTests(unittest.TestCase):
                     obj=a.get_object(); action=obj.get('/A')
                     if action and action.get('/URI'): urls.append(action.get('/URI'))
             self.assertIn('https://nima-moheb.github.io/myCV/',urls)
+            # The first normal content page must itself expose a clickable link.
+            page2_urls=[]
+            for a in rd.pages[1].get('/Annots',[]) or []:
+                obj=a.get_object(); action=obj.get('/A')
+                if action and action.get('/URI'): page2_urls.append(action.get('/URI'))
+            self.assertIn('https://nima-moheb.github.io/myCV/',page2_urls)
 
     def test_page_surgery_keeps_other_artifacts_byte_identical(self):
         with tempfile.TemporaryDirectory() as td:
@@ -48,5 +54,21 @@ class EngineTests(unittest.TestCase):
             for pid in before:
                 if pid=='trend': self.assertNotEqual(before[pid]['sha256'],after[pid]['sha256'])
                 else: self.assertEqual(before[pid]['sha256'],after[pid]['sha256'],pid)
+
+    def test_persian_cover_auto_mirrors_and_builds(self):
+        src=ROOT/'examples/persian_cover.json'
+        with tempfile.TemporaryDirectory() as td:
+            out=Path(td)/'fa.pdf'
+            build(src,out)
+            rd=PdfReader(out)
+            self.assertEqual(len(rd.pages),2)
+            self.assertAlmostEqual(float(rd.pages[0].mediabox.width),595.2756,places=1)
+            self.assertAlmostEqual(float(rd.pages[0].mediabox.height),841.8898,places=1)
+
+    def test_line_chart_requires_real_labels_in_example(self):
+        cfg=json.loads(EXAMPLE.read_text())
+        trend=next(p for p in cfg['pages'] if p['id']=='trend')
+        self.assertEqual(trend['chart']['type'],'line')
+        self.assertEqual(len(trend['chart']['labels']),len(trend['chart']['data']))
 
 if __name__=='__main__': unittest.main()
