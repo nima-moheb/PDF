@@ -14,7 +14,7 @@ A deterministic A4 report compiler for finished, human-facing PDFs. The AI suppl
 - Schema/theme assets are packaged inside `reportkit`; editable-repository layout is not required after installation.
 - Final-output safety rejects TODO/draft/internal/debug/placeholder language.
 - Missing evidence assets are hard failures.
-- Visible resume labels are backed by real clickable PDF URI annotations.
+- Normal-page footers contain no resume button. The closing page shows the real resume URL and that visible URL is a clickable PDF URI annotation.
 - No GitHub Actions are required for routine generation or verification.
 
 ## Setup
@@ -57,3 +57,7 @@ python -m unittest discover -s tests -v
 ```
 
 See `AI_USAGE.md`, `docs/DESIGN_SYSTEM.md`, `docs/COMPONENTS.md`, and `docs/ARCHITECTURE.md` before generating reports.
+
+## Cover system
+
+Five engine-owned variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`. `signal-orbit` is the default. `meta.mode: "cover_showcase"` exists only for engine-generated comparison PDFs.
