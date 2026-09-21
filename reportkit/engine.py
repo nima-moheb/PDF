@@ -28,6 +28,7 @@ SCHEMA = json.loads((ROOT/"schemas/report.schema.json").read_text())
 
 FONT_DIR = ROOT/".runtime-fonts"
 FONT_DIR.mkdir(exist_ok=True)
+RESUME_URL = "https://nima-moheb.github.io/myCV/"
 
 
 def _first_existing(*paths):
@@ -174,6 +175,38 @@ def pill(c,text,x,y,w,h,th,dark=False):
     c.setFillColor(color(fg)); c.setFont('LatinB',7.3); c.drawCentredString(x+w/2,y+h/2-2.2,text.upper())
 
 
+
+def draw_resume_link(c, x, y, th, label="VIEW RESUME  ↗", size=7.2, align="left"):
+    """Draw a visibly interactive resume link and attach a real PDF URI annotation."""
+    c.saveState()
+    c.setFont('LatinB',size)
+    tw=pdfmetrics.stringWidth(label,'LatinB',size)
+    if align=="right":
+        tx=x-tw
+    else:
+        tx=x
+    c.setFillColor(color(th['accent']))
+    c.drawString(tx,y,label)
+    c.setStrokeColor(color(th['accent'],.55)); c.setLineWidth(.45)
+    c.line(tx,y-1.4,tx+tw,y-1.4)
+    # Give the annotation a generous hit target for PDF viewers.
+    c.linkURL(RESUME_URL,(tx-2,y-4,tx+tw+3,y+size+4),relative=0,thickness=0)
+    c.restoreState()
+    return tx,tw
+
+
+def _pdf_uri_count(path, target):
+    count=0
+    rd=PdfReader(str(path))
+    for page in rd.pages:
+        for ref in page.get('/Annots',[]) or []:
+            obj=ref.get_object()
+            action=obj.get('/A')
+            if action and action.get('/URI')==target:
+                count+=1
+    return count
+
+
 def _measure_block(block, width):
     kind=block.get('kind','text')
     if kind=='heading':
@@ -218,10 +251,8 @@ def header_footer(c, meta, page, page_title, th, footer_override=None):
     footer=footer_override or 'Nima Moheb  //  Full Stack Developer'
     c.setFont('LatinB',6.9); c.setFillColor(color('#59687C')); c.drawString(SAFE_X,fy+1.7*MM,footer[:58])
     if meta.get('branding') in ('normal','prominent'):
-        label='RESUME  ↗'; c.setFont('LatinB',6.9); c.setFillColor(color(th['accent']))
-        rx=SAFE_X+78*MM; c.drawString(rx,fy+1.7*MM,label)
-        rw=pdfmetrics.stringWidth(label,'LatinB',6.9)
-        c.linkURL('https://nima-moheb.github.io/myCV/',(rx,fy,rx+rw,fy+4.2*MM),relative=0,thickness=0)
+        # Always use the shared hyperlink primitive; never render link-looking dead text.
+        draw_resume_link(c,SAFE_X+78*MM,fy+1.7*MM,th,label='VIEW RESUME  ↗',size=6.9)
     pw=30*MM; ph=7.2*MM; px=W-SAFE_X-pw; py=fy-.2*MM
     round_rect(c,px,py,pw,ph,ph/2,fill=th['deep'])
     c.setFont('LatinB',6.6); c.setFillColor(color(th['accent2'])); c.drawString(px+4*MM,py+2.5*MM,'PAGE')
@@ -246,63 +277,117 @@ def tech_grid(c, th, dark=False):
     c.restoreState()
 
 
-def cover(c, meta, p, th):
-    # 2026 modern-digital cover: asymmetric depth, technical grid, controlled glow.
-    c.setFillColor(color(th['deep'])); c.rect(0,0,W,H,fill=1,stroke=0)
-    c.linearGradient(0,H*.15,W,H,[color(th['deep']),color(th['accent'])],[0,.78])
-    tech_grid(c,th,dark=True)
-    # large translucent architecture arcs
-    c.saveState(); c.setLineWidth(1.0)
-    for rr,a in [(78*MM,.11),(61*MM,.11),(44*MM,.10)]:
-        c.setStrokeColor(color(th['accent2'],a)); c.circle(W+8*MM,H-40*MM,rr,fill=0,stroke=1)
-    c.restoreState()
-    # gradient/glow modules
-    for cx,cy,r,a in [(W*.82,H*.75,34*MM,.14),(W*.73,H*.67,18*MM,.10),(W*.18,H*.18,22*MM,.10)]:
-        c.setFillColor(color(th['accent2'],a)); c.circle(cx,cy,r,fill=1,stroke=0)
-    # left identity rail
-    c.setFillColor(color(th['accent2'])); c.roundRect(16*MM,H-52*MM,2.2*MM,23*MM,1.1*MM,fill=1,stroke=0)
-    pill(c,p.get('eyebrow','REPORT'),21*MM,H-37*MM,42*MM,8.4*MM,th,dark=True)
-    c.setFont('LatinB',7); c.setFillColor(color('#CFE2FF')); c.drawRightString(W-17*MM,H-33*MM,'NIMA REPORT ENGINE  //  HUMAN-FACING OUTPUT')
+def _wave_path(c, rtl, th):
+    """Native vector interpretation of the selected 'digital wave' cover direction."""
+    c.saveState()
+    # Diagonal light plane — mirrored automatically for RTL.
+    if rtl:
+        pts=[(0,H*.94),(0,H*.53),(W*.63,H*.14),(W*.77,H*.14)]
+    else:
+        pts=[(W,H*.94),(W,H*.53),(W*.37,H*.14),(W*.23,H*.14)]
+    pth=c.beginPath(); pth.moveTo(*pts[0])
+    for pt in pts[1:]: pth.lineTo(*pt)
+    pth.close()
+    c.setFillColor(color(th['accent2'],.10)); c.setStrokeColor(color(th['accent2'],.55)); c.setLineWidth(1.2)
+    c.drawPath(pth,fill=1,stroke=1)
 
-    title=p.get('title',meta['title']); rtl=is_fa(title)
-    font='FaB' if rtl else 'LatinB'; size=30.5 if rtl else 34.5
-    lines=wrap(title,font,size,W-38*MM,rtl)
-    if len(lines)>3: raise ValueError('FIT_FAIL: cover title too long')
-    y=H-69*MM
+    # Layered data-wave ribbons. Purely decorative; no fake numeric labels.
+    def ribbon(y0, amp, alpha, offset):
+        p=c.beginPath()
+        if rtl:
+            p.moveTo(W,y0)
+            p.curveTo(W*.79,y0+amp*.70,W*.64,y0-amp*.55,W*.45,y0+amp*.08)
+            p.curveTo(W*.29,y0+amp*.55,W*.16,y0-amp*.20,0,y0+amp*.22)
+        else:
+            p.moveTo(0,y0)
+            p.curveTo(W*.21,y0+amp*.70,W*.36,y0-amp*.55,W*.55,y0+amp*.08)
+            p.curveTo(W*.71,y0+amp*.55,W*.84,y0-amp*.20,W,y0+amp*.22)
+        c.setStrokeColor(color(th['accent2'],alpha)); c.setLineWidth(1.0+offset*.45)
+        c.drawPath(p,fill=0,stroke=1)
+    for i in range(13):
+        ribbon(56*MM+i*2.0*MM,16*MM+i*.55*MM,.10+i*.015,i%3)
+
+    # Signal nodes on the wave side.
+    nodes=[(.14,.31),(.27,.37),(.40,.29),(.55,.41),(.70,.35),(.86,.46)]
+    for nx,ny in nodes:
+        x=(1-nx)*W if rtl else nx*W
+        y=ny*H
+        c.setFillColor(color(th['accent2'],.15)); c.circle(x,y,4.0*MM,fill=1,stroke=0)
+        c.setFillColor(color(th['accent2'])); c.circle(x,y,1.2*MM,fill=1,stroke=0)
+    c.restoreState()
+
+
+def cover(c, meta, p, th):
+    """Selected cover #2: diagonal digital-wave composition, automatically mirrored for RTL."""
+    title=p.get('title',meta['title'])
+    rtl=bool(p.get('direction')=='rtl' or (p.get('direction')!='ltr' and is_fa(title)))
+    c.setFillColor(color(th['deep'])); c.rect(0,0,W,H,fill=1,stroke=0)
+    # Dark -> vivid gradient, mirrored by direction.
+    if rtl:
+        c.linearGradient(W,0,0,H,[color(th['deep']),color(th['accent'])],[0,.88])
+    else:
+        c.linearGradient(0,0,W,H,[color(th['deep']),color(th['accent'])],[0,.88])
+    tech_grid(c,th,dark=True)
+    _wave_path(c,rtl,th)
+
+    # Small top identity and cover category.
+    eyebrow=p.get('eyebrow', 'گزارش' if rtl else 'REPORT')
+    c.setFillColor(color(th['accent2'])); c.setLineWidth(1.4)
+    if rtl:
+        c.line(W-18*MM,H-37*MM,W-5*MM,H-37*MM)
+        draw_text(c,eyebrow,W-82*MM,H-44*MM,64*MM,size=8.8,bold=True,rtl=is_fa(eyebrow),colorv='#EAF5FF',max_lines=1)
+        c.setFont('LatinB',6.8); c.setFillColor(color('#BFD8FF')); c.drawString(16*MM,H-31*MM,'DATA  ←  INSIGHT  ←  IMPACT')
+    else:
+        c.line(18*MM,H-37*MM,31*MM,H-37*MM)
+        draw_text(c,eyebrow,18*MM,H-44*MM,64*MM,size=8.8,bold=True,rtl=False,colorv='#EAF5FF',max_lines=1)
+        c.setFont('LatinB',6.8); c.setFillColor(color('#BFD8FF')); c.drawRightString(W-16*MM,H-31*MM,'DATA  →  INSIGHT  →  IMPACT')
+
+    # Title block occupies the quiet side; Persian is genuinely mirrored to the right.
+    title_w=118*MM
+    tx=W-18*MM-title_w if rtl else 18*MM
+    y=H-70*MM
+    font='FaB' if rtl else 'LatinB'
+    size=31.5 if rtl else 32.5
+    lines=wrap(title,font,size,title_w,rtl)
+    if len(lines)>4: raise ValueError('FIT_FAIL: cover title too long')
     c.setFillColor(white)
     for line in lines:
-        if rtl: c.setFont(font,size); c.drawRightString(W-18*MM,y,visual_rtl(line))
-        else: c.setFont(font,size); c.drawString(18*MM,y,line)
-        y-=size*1.18
-    glow_line(c,18*MM,y+3*MM,92*MM,y+3*MM,th,1.0)
+        if rtl:
+            c.setFont(font,size); c.drawRightString(tx+title_w,y,visual_rtl(line))
+        else:
+            c.setFont(font,size); c.drawString(tx,y,line)
+        y-=size*1.16
+
+    # Accent underline follows reading direction.
+    uy=y+2*MM
+    if rtl: glow_line(c,tx+title_w-42*MM,uy,tx+title_w,uy,th,.9)
+    else: glow_line(c,tx,uy,tx+42*MM,uy,th,.9)
+
     subtitle=p.get('subtitle',meta.get('subtitle',''))
     if subtitle:
-        y-=7*MM; draw_text(c,subtitle,18*MM,y,W-48*MM,size=11.7,colorv='#E9F2FF',max_lines=4)
+        y-=7*MM
+        draw_text(c,subtitle,tx,y,title_w,size=11.2,rtl=rtl if is_fa(subtitle) else None,colorv='#EAF2FF',max_lines=5)
 
-    # visual data module, decorative but report-like rather than ornamental
-    mx=18*MM; my=66*MM; mw=W-36*MM; mh=44*MM
-    round_rect(c,mx,my,mw,mh,15,fill='#FFFFFF',stroke='#FFFFFF',sw=.35,alpha=.10)
-    c.setFont('LatinB',6.8); c.setFillColor(color('#CFE2FF')); c.drawString(mx+7*MM,my+mh-9*MM,'REPORT SIGNAL')
-    bars=[.34,.49,.43,.65,.76,.92]
-    bw=8*MM; gap=6*MM; bx=mx+7*MM; base=my+11*MM
-    for i,v in enumerate(bars):
-        bh=20*MM*v
-        xx=bx+i*(bw+gap)
-        c.setFillColor(color(th['accent'])); c.roundRect(xx,base,bw,bh,bw/2,fill=1,stroke=0)
-        if bh>5*MM:
-            c.setFillColor(color(th['accent2'],.55)); c.roundRect(xx,base+bh*.68,bw,bh*.32,bw/2,fill=1,stroke=0)
-    c.setFillColor(color('#D9E8FF')); c.setFont('Latin',7); c.drawRightString(mx+mw-8*MM,my+13*MM,'STRUCTURED  /  TRACEABLE  /  FINAL')
-
-    # metadata strip
-    yb=18*MM; gap=4*MM; cw=(W-32*MM-gap*2)/3
-    cells=[('Prepared by',meta.get('author','Nima Moheb')),('Date',meta.get('date','')),('For',meta.get('recipient',''))]
+    # Compact metadata cards stay in the title half and reverse order for RTL.
+    yb=H-160*MM; gap=3.2*MM; cw=(title_w-gap*2)/3; ch=24*MM
+    if rtl:
+        cells=[('برای',meta.get('recipient','')),('تاریخ',meta.get('date','')),('تهیه شده توسط',meta.get('author','Nima Moheb'))]
+    else:
+        cells=[('Prepared by',meta.get('author','Nima Moheb')),('Date',meta.get('date','')),('For',meta.get('recipient',''))]
     for i,(lab,val) in enumerate(cells):
-        x=16*MM+i*(cw+gap)
-        round_rect(c,x,yb,cw,27*MM,10,fill='#FFFFFF',stroke='#FFFFFF',sw=.3,alpha=.11)
-        c.setFillColor(color('#CFE2FF')); c.setFont('LatinB',6.8); c.drawString(x+5*MM,yb+18.5*MM,lab.upper())
-        font='FaUI' if is_fa(val) else 'LatinB'; c.setFont(font,9.5); c.setFillColor(white)
-        if is_fa(val): c.drawRightString(x+cw-5*MM,yb+9.3*MM,visual_rtl(val))
-        else: c.drawString(x+5*MM,yb+9.3*MM,val[:23])
+        x=tx+i*(cw+gap)
+        round_rect(c,x,yb,cw,ch,9,fill='#061A36',stroke=th['accent2'],sw=.45,alpha=.64)
+        draw_text(c,lab,x+4*MM,yb+16*MM,cw-8*MM,size=6.5,bold=True,rtl=is_fa(lab),colorv='#BFD8FF',max_lines=1)
+        draw_text(c,str(val),x+4*MM,yb+7.5*MM,cw-8*MM,size=8.6,bold=True,rtl=is_fa(str(val)),colorv='#FFFFFF',max_lines=2)
+
+    # Bottom micro identity — no fake KPIs.
+    c.setFont('LatinB',6.3); c.setFillColor(color('#93C7FF'))
+    if rtl:
+        c.drawRightString(W-18*MM,13*MM,'NIMA REPORT ENGINE')
+        c.drawString(18*MM,13*MM,'STRUCTURED  /  TRACEABLE  /  FINAL')
+    else:
+        c.drawString(18*MM,13*MM,'NIMA REPORT ENGINE')
+        c.drawRightString(W-18*MM,13*MM,'STRUCTURED  /  TRACEABLE  /  FINAL')
 
 
 def page_title(c,title,eyebrow,th,y=H-30*MM):
@@ -380,32 +465,55 @@ def cards_page(c,meta,p,th,page):
 def chart_text(c,meta,p,th,page):
     header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
     y=page_title(c,p['title'],p.get('eyebrow','Data'),th)
-    chart=p.get('chart',{}); data=chart.get('data',[]); labels=chart.get('labels',[])
+    chart=p.get('chart',{}); data=[float(v) for v in chart.get('data',[])]; labels=chart.get('labels',[])
     box_x=SAFE_X; box_y=74*MM; box_w=W-2*SAFE_X; box_h=105*MM
     shadow_card(c,box_x,box_y,box_w,box_h,14)
     c.setFillColor(color('#536174')); c.setFont('LatinB',8); c.drawString(box_x+7*MM,box_y+box_h-11*MM,chart.get('title','TREND').upper())
-    if not data: data=[1]
-    maxv=max(data)*1.12; left=box_x+12*MM; bottom=box_y+18*MM; gw=box_w-24*MM; gh=box_h-38*MM
-    c.setStrokeColor(color('#CFD9E7')); c.setLineWidth(.45)
-    for i in range(5):
-        yy=bottom+i*gh/4; c.line(left,yy,left+gw,yy)
-    if chart.get('type','line')=='bar':
-        bw=gw/max(len(data)*1.8,1)
+    if not data: raise ValueError(f'DATA_FAIL: chart page {p["id"]} has no data')
+
+    maxv=max(data); minv=min(data)
+    if maxv==minv: maxv=minv+1
+    pad=(maxv-minv)*.16
+    lo=max(0,minv-pad); hi=maxv+pad
+    left=box_x+15*MM; bottom=box_y+20*MM; gw=box_w-28*MM; gh=box_h-41*MM
+
+    # Quiet grid with numeric scale: unmistakably a chart, never decorative bars.
+    c.setFont('Latin',6.6); c.setFillColor(color('#7A8798'))
+    for i in range(4):
+        ratio=i/3; yy=bottom+ratio*gh; val=lo+ratio*(hi-lo)
+        c.setStrokeColor(color('#D9E2EE')); c.setLineWidth(.35); c.line(left,yy,left+gw,yy)
+        c.drawRightString(left-3*MM,yy-2,f'{val:.0f}')
+
+    typ=chart.get('type','line')
+    if typ=='bar':
+        slot=gw/max(len(data),1)
+        bw=min(13*MM,slot*.56)
         for i,v in enumerate(data):
-            x=left+(i+.35)*gw/len(data); h=gh*v/maxv
-            c.setFillColor(color(th['accent'])); c.roundRect(x,bottom,bw,h,bw/2,fill=1,stroke=0)
-            if h>4*MM:
-                c.setFillColor(color(th['accent2'],.55)); c.roundRect(x,bottom+h*.72,bw,h*.28,bw/2,fill=1,stroke=0)
-            if i < len(labels): c.setFillColor(color('#69778A')); c.setFont('Latin',7); c.drawCentredString(x+bw/2,bottom-10,labels[i][:10])
-    else:
+            x=left+i*slot+(slot-bw)/2
+            h=max(1.4*MM,gh*(v-lo)/(hi-lo))
+            # Clean single-body bar + subtle shadow. No segmented tops / horns.
+            c.setFillColor(color('#0A1930',.08)); c.roundRect(x+1.2, bottom-1.2, bw, h, bw*.22, fill=1, stroke=0)
+            c.setFillColor(color(th['accent'])); c.roundRect(x,bottom,bw,h,bw*.22,fill=1,stroke=0)
+            c.setFont('LatinB',7.3); c.setFillColor(color(th['deep'])); c.drawCentredString(x+bw/2,bottom+h+3.5,f'{v:g}')
+            lab=labels[i] if i<len(labels) else str(i+1)
+            c.setFont('Latin',7); c.setFillColor(color('#69778A')); c.drawCentredString(x+bw/2,bottom-10,lab[:12])
+    elif typ=='line':
         pts=[]
-        for i,v in enumerate(data): pts.append((left+i*gw/max(len(data)-1,1),bottom+gh*v/maxv))
-        c.setStrokeColor(color(th['accent'])); c.setLineWidth(2.3)
+        for i,v in enumerate(data):
+            x=left+i*gw/max(len(data)-1,1)
+            yy=bottom+gh*(v-lo)/(hi-lo)
+            pts.append((x,yy,v))
+        c.setStrokeColor(color(th['accent'])); c.setLineWidth(2.4)
         for a,b in zip(pts,pts[1:]): c.line(a[0],a[1],b[0],b[1])
-        for x,yy in pts:
-            c.setFillColor(color(th['accent2'])); c.circle(x,yy,3.4,fill=1,stroke=0)
-            c.setFillColor(color(th['accent'])); c.circle(x,yy,1.8,fill=1,stroke=0)
-    # analysis card
+        for i,(x,yy,v) in enumerate(pts):
+            c.setFillColor(color(th['accent2'],.20)); c.circle(x,yy,4.0,fill=1,stroke=0)
+            c.setFillColor(color(th['accent'])); c.circle(x,yy,2.2,fill=1,stroke=0)
+            c.setFont('LatinB',7.1); c.setFillColor(color(th['deep'])); c.drawCentredString(x,yy+7,f'{v:g}')
+            lab=labels[i] if i<len(labels) else str(i+1)
+            c.setFont('Latin',7); c.setFillColor(color('#69778A')); c.drawCentredString(x,bottom-10,lab[:12])
+    else:
+        raise ValueError(f'DATA_FAIL: unsupported chart type {typ!r}')
+
     ay=31*MM; ah=34*MM
     round_rect(c,SAFE_X,ay,W-2*SAFE_X,ah,12,fill=th['soft'],stroke=th['accent'],sw=.5)
     draw_text(c,p.get('analysis',''),SAFE_X+6*MM,ay+ah-9*MM,W-2*SAFE_X-12*MM,size=9.4,max_lines=6)
@@ -526,11 +634,8 @@ def closing(c,meta,p,th,page):
     shadow_card(c,SAFE_X,y,W-2*SAFE_X,h,14,accent=th['accent'])
     c.setFillColor(color(th['deep'])); c.setFont('LatinB',14); c.drawString(SAFE_X+7*MM,y+23*MM,'Nima Moheb')
     c.setFillColor(color('#5B687A')); c.setFont('Latin',9); c.drawString(SAFE_X+7*MM,y+14*MM,'Full Stack Developer')
-    label='View Resume  ->'; url='https://nima-moheb.github.io/myCV/'
-    c.setFillColor(color(th['accent'])); c.setFont('LatinB',9.2); c.drawString(SAFE_X+7*MM,y+6*MM,label)
-    tw=pdfmetrics.stringWidth(label,'LatinB',9.2)
-    c.linkURL(url,(SAFE_X+7*MM,y+4*MM,SAFE_X+7*MM+tw,y+10*MM),relative=0,thickness=0)
-    c.setFont('Latin',7.5); c.setFillColor(color('#778497')); c.drawRightString(W-SAFE_X-7*MM,y+6*MM,url.replace('https://',''))
+    draw_resume_link(c,SAFE_X+7*MM,y+6*MM,th,label='VIEW RESUME  ↗',size=9.2)
+    c.setFont('Latin',7.5); c.setFillColor(color('#778497')); c.drawRightString(W-SAFE_X-7*MM,y+6*MM,RESUME_URL.replace('https://',''))
 
 RENDERERS={'cover':cover,'summary':summary,'text':text_page,'cards':cards_page,'chart_text':chart_text,'comparison':comparison,'table':table_page,'image_text':image_text,'timeline':timeline,'sources':sources,'closing':closing}
 
@@ -580,5 +685,8 @@ def build(config_path,out_pdf,only_ids=None):
     for p in cfg['pages']:
         pp=pages_dir/manifest[p['id']]['file']; rd=PdfReader(str(pp)); wr.add_page(rd.pages[0])
     with out_pdf.open('wb') as f: wr.write(f)
+    # A report may visually mention a resume only if it is a real clickable PDF URI.
+    if cfg['meta'].get('branding') in ('normal','prominent') and _pdf_uri_count(out_pdf,RESUME_URL)<1:
+        raise RuntimeError('LINK_FAIL: resume URL annotation missing from final PDF')
     (out_pdf.parent/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     return manifest
