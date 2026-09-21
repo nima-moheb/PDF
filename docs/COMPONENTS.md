@@ -1,15 +1,15 @@
 # Approved Page Archetypes
 
-- `cover`: strong first page; title, subtitle, author/date/recipient.
+- `cover`: title, subtitle, eyebrow, approved `digital-wave` variant and direction.
 - `summary`: intro + 1-4 metric cards.
-- `text`: one or more content groups with dynamic card height; paragraphs and bullets.
-- `cards`: arbitrary titled information cards.
-- `chart_text`: chart plus bounded analysis and optional source line.
-- `comparison`: up to three comparable columns/cards.
-- `table`: designed high-salience table with bounded rows/height.
-- `image_text`: real screenshot/image plus explanation; missing image is a build failure.
-- `timeline`: ordered steps with arbitrary labels/content.
+- `text`: structured heading/text/bullet blocks with measured group height.
+- `cards`: up to six semantic information cards.
+- `chart_text`: validated line/bar data plus bounded analysis and optional source.
+- `comparison`: up to three comparable semantic items.
+- `table`: 2-6 engine-sized columns; rows wrap and grow deterministically rather than truncate.
+- `image_text`: required real image + explanation; relative asset paths resolve from report JSON.
+- `timeline`: up to six ordered steps.
 - `sources`: designed source cards/list.
 - `closing`: final statement + Nima identity and clickable resume.
 
-The AI may select these and provide content. It must not provide x/y coordinates, font sizes, margins, palette values, or chart styling.
+The strict schema rejects x/y coordinates, font sizes, margins, colors, per-card accents, table widths, custom footer/header geometry, unsupported chart types, and arbitrary extra fields.
