@@ -10,6 +10,7 @@ This repository is a report compiler. The AI supplies structured content; the en
 - If content does not fit, treat the build error as feedback: shorten without losing meaning, split/expand into another page, or select another approved archetype. Never silently shrink normal text into unreadability.
 - A missing evidence/screenshot asset is a build failure. Never substitute decorative fake evidence.
 - Page 1 has no visible page number. Pages 2+ use deterministic header/footer components.
+- The approved cover is `variant: digital-wave`. Use `direction: auto` by default; Persian titles mirror to RTL automatically. Do not invent another cover design.
 - When revising one page, use `--only <page-id>` and verify unaffected page hashes are unchanged.
 
 ## Visual identity
@@ -19,6 +20,8 @@ This repository is a report compiler. The AI supplies structured content; the en
 - Latin: IBM Plex Sans. Persian: Vazirmatn where bootstrapped.
 - Mixed Persian/English/numbers/URLs must render correctly.
 - Personal identity: Nima Moheb. Resume: https://nima-moheb.github.io/myCV/
+- If a resume label is visible, it MUST be a real clickable PDF URI annotation. Link-looking dead text is a build failure.
+- Charts must communicate data, not decoration: line charts show x labels + point values; bar charts use clean single-body bars with value labels.
 
 ## Approved archetypes
 `cover`, `summary`, `text`, `cards`, `chart_text`, `comparison`, `table`, `image_text`, `timeline`, `sources`, `closing`.
