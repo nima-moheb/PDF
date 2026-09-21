@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "mode": "cover_showcase",
+    "title": "گزارش عملکرد سئو و وب",
+    "subtitle": "مرور فنی، دیده شدن در جست وجو و نتایج قابل اندازه گیری",
+    "theme": "blue",
+    "author": "Nima Moheb",
+    "date": "شهریور ۱۴۰۵",
+    "recipient": "کارفرما / مدیر",
+    "branding": "subtle"
+  },
+  "pages": [
+    {"id":"signal-orbit-fa","type":"cover","variant":"signal-orbit","theme":"blue","direction":"rtl","eyebrow":"گزارش عملکرد","title":"گزارش عملکرد سئو و وب - شهریور ۱۴۰۵","subtitle":"پیشرفت فنی، دیده شدن در جست وجو، وضعیت اجرا و نتایج قابل اندازه گیری در یک گزارش منسجم."},
+    {"id":"glass-panel-fa","type":"cover","variant":"glass-panel","theme":"purple","direction":"rtl","eyebrow":"گزارش مدیریتی","title":"گزارش عملکرد سئو و وب - شهریور ۱۴۰۵","subtitle":"پیشرفت فنی، دیده شدن در جست وجو، وضعیت اجرا و نتایج قابل اندازه گیری در یک گزارش منسجم."},
+    {"id":"aurora-strata-fa","type":"cover","variant":"aurora-strata","theme":"green","direction":"rtl","eyebrow":"گزارش دیجیتال","title":"گزارش عملکرد سئو و وب - شهریور ۱۴۰۵","subtitle":"پیشرفت فنی، دیده شدن در جست وجو، وضعیت اجرا و نتایج قابل اندازه گیری در یک گزارش منسجم."},
+    {"id":"constellation-fa","type":"cover","variant":"constellation","theme":"orange","direction":"rtl","eyebrow":"تحلیل و گزارش","title":"گزارش عملکرد سئو و وب - شهریور ۱۴۰۵","subtitle":"پیشرفت فنی، دیده شدن در جست وجو، وضعیت اجرا و نتایج قابل اندازه گیری در یک گزارش منسجم."},
+    {"id":"editorial-split-fa","type":"cover","variant":"editorial-split","theme":"graphite","direction":"rtl","eyebrow":"گزارش کارفرما","title":"گزارش عملکرد سئو و وب - شهریور ۱۴۰۵","subtitle":"پیشرفت فنی، دیده شدن در جست وجو، وضعیت اجرا و نتایج قابل اندازه گیری در یک گزارش منسجم."}
+  ]
+}
