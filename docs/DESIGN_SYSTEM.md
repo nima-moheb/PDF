@@ -8,7 +8,7 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 
 - A4 portrait.
 - Modern Digital: technical grid, asymmetric composition, controlled gradients/glow, rounded depth, strong hierarchy.
-- Page 1 uses the approved `digital-wave` cover and no visible page number.
+- Page 1 uses one approved cover variant and no visible page number. Approved variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`; all mirror for RTL.
 - Pages 2+ use the same engine-owned navigation header and identity footer.
 - Same geometry across coordinated blue, green, purple, orange, red, and graphite palettes.
 
@@ -25,3 +25,14 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Line charts require labels matching every data point and show point values.
 - Bar charts use one clean rounded body per value with value labels.
 - Unsupported chart types fail schema validation.
+
+## Interior layout v0.4
+
+- Section titles sit lower than the navigation rail to preserve breathing room.
+- Metric values are centered within summary cards.
+- Content and timeline cards use one consistent top accent rail; no first-card-only exception.
+- Chart pages anchor the chart immediately below the section title rather than leaving a large dead band.
+- Comparison cards use soft header fields, index pills and consistent color hierarchy.
+- Tables use a restrained light header, subtle separators and no full-width accent bar.
+- Source cards use content-sized compact rows instead of stretching to fill the page.
+- Normal footers never show `VIEW RESUME`; the closing identity card exposes the actual clickable resume URL.
