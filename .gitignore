@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+.runtime-fonts/
+output/
+acceptance/
+.surgery-test/
+assets/fonts/*.ttf
+assets/fonts/*.otf
