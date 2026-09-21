@@ -29,3 +29,7 @@ After merge, PyMuPDF opens and renders every final page at 2x resolution. The pr
 ## Failure over fakery
 
 The build fails on malformed archetype content, banned internal text, missing evidence, overflow/fit violations, dead visible resume links, malformed table/chart data, or failed rendered QA. Normal content is never silently sliced to fit.
+
+## Visual regression workflow
+
+Cover comparison fixtures live in `examples/cover_showcase_en.json` and `examples/cover_showcase_fa.json`. They are rendered by the same production cover renderer and are not mockups or exported images. Visual changes must be verified by building these fixtures plus `examples/client_report.json` and rendering the resulting PDFs.
