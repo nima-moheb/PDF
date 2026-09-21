@@ -37,3 +37,15 @@ python -m unittest discover -s tests -v
 ```
 
 See `AI_USAGE.md`, `docs/DESIGN_SYSTEM.md`, `docs/COMPONENTS.md`, and `docs/ARCHITECTURE.md` before generating reports.
+
+
+## Cover
+The approved v1 cover is `digital-wave`. Use `direction: auto`; Persian cover titles mirror to RTL automatically. See:
+- `examples/client_report.json`
+- `examples/persian_cover.json`
+
+## Link guarantee
+When branding is `normal` or `prominent`, the final merged PDF is validated for a real clickable resume URI annotation. A dead visual "resume" label causes the build to fail.
+
+## Chart guarantee
+Line charts render x labels and point values. Bar charts use clean single-body rounded bars with value labels—no segmented decorative caps.
