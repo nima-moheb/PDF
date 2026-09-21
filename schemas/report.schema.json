@@ -1,19 +1,53 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["meta", "pages"],
+  "required": [
+    "meta",
+    "pages"
+  ],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["title", "theme", "author"],
+      "required": [
+        "title",
+        "theme",
+        "author"
+      ],
       "properties": {
-        "title": {"type": "string", "minLength": 1},
-        "subtitle": {"type": "string"},
-        "theme": {"enum": ["blue","green","purple","orange","red","graphite"]},
-        "author": {"type": "string", "minLength": 1},
-        "date": {"type": "string"},
-        "recipient": {"type": "string"},
-        "branding": {"enum": ["subtle","normal","prominent"]}
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "theme": {
+          "enum": [
+            "blue",
+            "green",
+            "purple",
+            "orange",
+            "red",
+            "graphite"
+          ]
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        },
+        "branding": {
+          "enum": [
+            "subtle",
+            "normal",
+            "prominent"
+          ]
+        }
       },
       "additionalProperties": true
     },
@@ -22,13 +56,51 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "type"],
+        "required": [
+          "id",
+          "type"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
-          "type": {"enum": ["cover","summary","text","cards","chart_text","comparison","table","image_text","timeline","sources","closing"]},
-          "title": {"type": "string"},
-          "header": {"type": "string"},
-          "footer": {"type": "string"}
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "type": {
+            "enum": [
+              "cover",
+              "summary",
+              "text",
+              "cards",
+              "chart_text",
+              "comparison",
+              "table",
+              "image_text",
+              "timeline",
+              "sources",
+              "closing"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "header": {
+            "type": "string"
+          },
+          "footer": {
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "auto",
+              "ltr",
+              "rtl"
+            ]
+          },
+          "variant": {
+            "enum": [
+              "digital-wave"
+            ]
+          }
         },
         "additionalProperties": true
       }
