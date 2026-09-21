@@ -1,0 +1,8 @@
+{
+  "blue": {"accent":"#2A6BFF","accent2":"#6ED7FF","deep":"#071B3A","soft":"#EAF2FF","glow":"#88B4FF"},
+  "green": {"accent":"#13A36D","accent2":"#79E6BA","deep":"#062D22","soft":"#E8F8F1","glow":"#7BE0B7"},
+  "purple": {"accent":"#7957FF","accent2":"#C58BFF","deep":"#20103F","soft":"#F0ECFF","glow":"#BBA5FF"},
+  "orange": {"accent":"#FF7A1A","accent2":"#FFC857","deep":"#291407","soft":"#FFF2E7","glow":"#FFB56B"},
+  "red": {"accent":"#E5485E","accent2":"#FF8A9A","deep":"#3B0B14","soft":"#FFECEE","glow":"#FF9AA7"},
+  "graphite": {"accent":"#65758B","accent2":"#AAB6C5","deep":"#111827","soft":"#F1F4F7","glow":"#BAC3CF"}
+}
