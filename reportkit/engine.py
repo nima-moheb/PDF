@@ -438,3 +438,147 @@ def table_page(c,meta,p,th,page):
     x=SAFE_X; total=W-2*SAFE_X; widths=p.get('widths') or [1/len(cols)]*len(cols)
     s=sum(widths); widths=[total*v/s for v in widths]
     rh=13*MM; hh=14*MM
+    # elevated container
+    h=hh+rh*len(rows)
+    if h > y-28*MM: raise ValueError('FIT_FAIL: table too tall')
+    yy=y-h
+    shadow_card(c,x,yy,total,h,13)
+    c.setFillColor(color(th['deep'])); c.roundRect(x,yy+h-hh,total,hh,11,fill=1,stroke=0)
+    c.setFillColor(color(th['accent'])); c.roundRect(x,yy+h-2.6,total,2.6,1.3,fill=1,stroke=0)
+    xx=x
+    for j,col in enumerate(cols):
+        c.setFont('FaUI' if is_fa(col) else 'LatinB',8.2); c.setFillColor(white)
+        if is_fa(col): c.drawRightString(xx+widths[j]-4*MM,yy+h-hh/2-2.5,visual_rtl(col))
+        else: c.drawString(xx+4*MM,yy+h-hh/2-2.5,col[:24])
+        xx+=widths[j]
+    for i,row in enumerate(rows):
+        ry=yy+h-hh-(i+1)*rh
+        if i%2==0:
+            c.setFillColor(color(th['soft'],.55)); c.rect(x,ry,total,rh,fill=1,stroke=0)
+        xx=x
+        for j,val in enumerate(row):
+            val=str(val); font='Fa' if is_fa(val) else 'Latin'; c.setFont(font,8.2); c.setFillColor(color('#263449'))
+            if is_fa(val): c.drawRightString(xx+widths[j]-4*MM,ry+rh/2-2.5,visual_rtl(val[:80]))
+            else: c.drawString(xx+4*MM,ry+rh/2-2.5,val[:38])
+            xx+=widths[j]
+        c.setStrokeColor(color('#D9E2EE')); c.setLineWidth(.25); c.line(x,ry,x+total,ry)
+
+
+def image_text(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Evidence'),th)
+    x=SAFE_X; iw=W-2*SAFE_X; ih=132*MM; iy=y-ih
+    shadow_card(c,x,iy,iw,ih,14)
+    img=p.get('image')
+    if not img or not Path(img).exists():
+        raise ValueError(f'ASSET_FAIL: image page {p["id"]} requires a valid image path')
+    c.drawImage(img,x+4*MM,iy+4*MM,iw-8*MM,ih-8*MM,preserveAspectRatio=True,anchor='c',mask='auto')
+    draw_text(c,p.get('text',''),SAFE_X,iy-10*MM,W-2*SAFE_X,size=10.2,max_lines=6)
+
+
+def timeline(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Timeline'),th)
+    items=p.get('items',[])[:6]; xline=SAFE_X+14*MM; c.setStrokeColor(color(th['accent'],.35)); c.setLineWidth(2); c.line(xline,36*MM,xline,y-5*MM)
+    gap=(y-48*MM)/max(len(items),1)
+    yy=y-12*MM
+    for i,it in enumerate(items):
+        c.setFillColor(color(th['accent2'])); c.circle(xline,yy,4.2*MM,fill=1,stroke=0); c.setFillColor(color(th['accent'])); c.circle(xline,yy,2.1*MM,fill=1,stroke=0)
+        shadow_card(c,xline+10*MM,yy-17*MM,W-xline-10*MM-SAFE_X,32*MM,10,accent=th['accent'] if i==0 else None)
+        draw_text(c,it.get('title',''),xline+16*MM,yy+7*MM,W-xline-28*MM-SAFE_X,size=10.5,bold=True,max_lines=2)
+        draw_text(c,it.get('text',''),xline+16*MM,yy-3*MM,W-xline-28*MM-SAFE_X,size=8.5,colorv='#59677A',max_lines=3)
+        yy-=gap
+
+
+def sources(c,meta,p,th,page):
+    header_footer(c,meta,page,p['title'],th,p.get('footer')); tech_grid(c,th)
+    y=page_title(c,p['title'],p.get('eyebrow','Sources'),th)
+    items=p.get('items',[])
+    if not items: return
+    cols=2 if len(items)<=6 else 1; gap=5*MM
+    if cols==2:
+        w=(W-2*SAFE_X-gap)/2; rows=math.ceil(len(items)/2); avail=y-31*MM-gap*(rows-1); h=avail/rows
+        if h<37*MM: raise ValueError('FIT_FAIL: source cards too dense')
+        for i,s in enumerate(items):
+            col=i%2; row=i//2; x=SAFE_X+col*(w+gap); top=y-row*(h+gap); yy=top-h
+            shadow_card(c,x,yy,w,h,12,accent=th['accent'] if i==0 else None)
+            pill(c,f'{i+1:02d}',x+5*MM,top-12*MM,14*MM,7.5*MM,th)
+            draw_text(c,s,x+5*MM,top-21*MM,w-10*MM,size=9.1,max_lines=6,colorv='#344256')
+    else:
+        for i,s in enumerate(items,1):
+            h=31*MM; yy=y-h
+            shadow_card(c,SAFE_X,yy,W-2*SAFE_X,h,11)
+            pill(c,f'{i:02d}',SAFE_X+5*MM,y-11*MM,14*MM,7*MM,th)
+            draw_text(c,s,SAFE_X+24*MM,y-9*MM,W-2*SAFE_X-30*MM,size=9.1,max_lines=4,colorv='#344256')
+            y=yy-gap
+            if y<30*MM: raise ValueError('FIT_FAIL: sources overflow')
+
+
+def closing(c,meta,p,th,page):
+    c.linearGradient(0,0,W,H,[color('#F8FAFD'),color(th['soft'])])
+    tech_grid(c,th)
+    c.setFillColor(color(th['accent'])); c.roundRect(SAFE_X,H-38*MM,34*MM,8*MM,4*MM,fill=1,stroke=0)
+    c.setFillColor(white); c.setFont('LatinB',8); c.drawCentredString(SAFE_X+17*MM,H-35.2*MM,'REPORT COMPLETE')
+    draw_text(c,p.get('title','Thank you'),SAFE_X,H-64*MM,W-2*SAFE_X,size=28,bold=True,max_lines=2)
+    draw_text(c,p.get('text',''),SAFE_X,H-88*MM,W-2*SAFE_X,size=11,max_lines=6,colorv='#4E5C70')
+    # prominent identity redesigned per decision
+    y=40*MM; h=36*MM
+    shadow_card(c,SAFE_X,y,W-2*SAFE_X,h,14,accent=th['accent'])
+    c.setFillColor(color(th['deep'])); c.setFont('LatinB',14); c.drawString(SAFE_X+7*MM,y+23*MM,'Nima Moheb')
+    c.setFillColor(color('#5B687A')); c.setFont('Latin',9); c.drawString(SAFE_X+7*MM,y+14*MM,'Full Stack Developer')
+    label='View Resume  ->'; url='https://nima-moheb.github.io/myCV/'
+    c.setFillColor(color(th['accent'])); c.setFont('LatinB',9.2); c.drawString(SAFE_X+7*MM,y+6*MM,label)
+    tw=pdfmetrics.stringWidth(label,'LatinB',9.2)
+    c.linkURL(url,(SAFE_X+7*MM,y+4*MM,SAFE_X+7*MM+tw,y+10*MM),relative=0,thickness=0)
+    c.setFont('Latin',7.5); c.setFillColor(color('#778497')); c.drawRightString(W-SAFE_X-7*MM,y+6*MM,url.replace('https://',''))
+
+RENDERERS={'cover':cover,'summary':summary,'text':text_page,'cards':cards_page,'chart_text':chart_text,'comparison':comparison,'table':table_page,'image_text':image_text,'timeline':timeline,'sources':sources,'closing':closing}
+
+
+def scrub(data):
+    raw=json.dumps(data,ensure_ascii=False)
+    upper=raw.upper()
+    found=[]
+    for x in BANNED:
+        if re.search(r'[A-Za-z]', x):
+            pat=r'(?<![A-Z])'+re.escape(x.upper())+r'(?![A-Z])'
+            if re.search(pat, upper): found.append(x)
+        else:
+            if x in raw: found.append(x)
+    if found: raise ValueError('PUBLIC_SAFETY_FAIL: banned text: '+', '.join(found))
+
+
+def render_page(meta,p,page_num,out):
+    th=THEMES[meta.get('theme','blue')]
+    c=canvas.Canvas(str(out),pagesize=A4,pageCompression=1)
+    c.setTitle(meta['title']); c.setAuthor(meta.get('author','Nima Moheb'))
+    fn=RENDERERS[p['type']]
+    if p['type']=='cover': fn(c,meta,p,th)
+    elif p['type']=='closing': fn(c,meta,p,th,page_num)
+    else: fn(c,meta,p,th,page_num)
+    c.showPage(); c.save()
+
+
+def sha(path):
+    h=hashlib.sha256(); h.update(Path(path).read_bytes()); return h.hexdigest()
+
+
+def build(config_path,out_pdf,only_ids=None):
+    register_fonts()
+    cfg=json.loads(Path(config_path).read_text())
+    validate(cfg,SCHEMA); scrub(cfg)
+    cfg['meta']['_page_count']=len(cfg['pages'])
+    out_pdf=Path(out_pdf); out_pdf.parent.mkdir(parents=True,exist_ok=True)
+    pages_dir=out_pdf.parent/'pages'; pages_dir.mkdir(exist_ok=True)
+    manifest={}
+    for idx,p in enumerate(cfg['pages'],1):
+        pp=pages_dir/f'{idx:03d}-{p["id"]}.pdf'
+        if only_ids is None or p['id'] in only_ids or not pp.exists():
+            render_page(cfg['meta'],p,idx,pp)
+        manifest[p['id']]={'index':idx,'file':pp.name,'sha256':sha(pp)}
+    wr=PdfWriter()
+    for p in cfg['pages']:
+        pp=pages_dir/manifest[p['id']]['file']; rd=PdfReader(str(pp)); wr.add_page(rd.pages[0])
+    with out_pdf.open('wb') as f: wr.write(f)
+    (out_pdf.parent/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
+    return manifest
