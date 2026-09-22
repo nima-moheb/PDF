@@ -72,3 +72,5 @@ The 22 September 2026 Nika CRM English/Persian reports are regression evidence f
 When a real report exposes a visual defect, fix the reusable renderer/archetype first and add a regression case. Do not patch the exported PDF by hand.
 
 - Long reports must not repeat one cards/text template page after page. v0.5 rejects more than two consecutive `cards` or `text` pages, and rejects those archetypes when either dominates more than 55% of an interior report. Re-architect the information using comparison, timeline, table, summary, chart, sources, or other appropriate approved archetypes.
+
+- For a substantial source report, an executive summary must synthesize the actual material rather than restating a generic product description. Use enough supported prose to explain the important findings (multiple short paragraphs when warranted), then use metrics/cards as reinforcement. Do not create a visually full page by inflating empty boxes around thin content.
