@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "title": "Nika CRM - System Architecture, Modules & Access Model",
+    "subtitle": "Repository-based audit of capabilities, authorization, workflows, controls, implementation status, and remaining readiness gaps.",
+    "theme": "blue",
+    "author": "Nima Moheb",
+    "date": "21 September 2026",
+    "recipient": "Nika CRM stakeholders",
+    "branding": "normal"
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "variant": "constellation",
+      "direction": "ltr",
+      "eyebrow": "SYSTEM AUDIT / 2026",
+      "title": "Nika CRM - System Architecture, Modules & Access Model",
+      "subtitle": "Repository-based audit of capabilities, authorization, workflows, controls, implementation status, and remaining readiness gaps."
+    },
+    {
+      "id": "executive-summary",
+      "type": "summary",
+      "eyebrow": "SYSTEM AT A GLANCE",
+      "title": "Executive summary",
+      "intro": "Nika is a multi-brand operating workspace and CRM for Applitent and Ofogh Nikan. It combines client operations, delivery control, evidence, communication, staff workflows, finance, integrations, auditability, and operational intelligence in one Laravel application. The repository is feature-rich but explicitly remains an implementation-in-progress system rather than a deployment candidate.",
+      "cards": [
+        {"label": "Business brands", "value": "2", "note": "Applitent + Ofogh Nikan"},
+        {"label": "Operational work types", "value": "5", "note": "Inquiry to commitment"},
+        {"label": "Role identities", "value": "7", "note": "UX role labels"},
+        {"label": "Sensitive permission grants", "value": "5", "note": "Explicit, not role-inherited"}
+      ]
+    },
+    {
+      "id": "product-boundary",
+      "type": "text",
+      "eyebrow": "PRODUCT BOUNDARY",
+      "title": "What Nika is - and what it is not",
+      "blocks": [
+        {"kind": "heading", "text": "Operational system, not a contact list"},
+        {"kind": "text", "text": "Nika treats CRM as an operating layer around clients and work. Client records connect to inquiries, opportunities, cases, tasks, commitments, documents, approvals, appointments, calls, finance records, communication, attendance-related availability, notifications, and audit events."},
+        {"kind": "heading", "text": "Deliberate boundaries"},
+        {"kind": "bullets", "items": [
+          "The existing Applitent portal remains authoritative for pre-cutover records; Nika is designed to ingest new post-cutover submissions.",
+          "WhatsApp and Telegram stay manual; no paid AI or n8n dependency is part of the current operating model.",
+          "Payroll rules are not fabricated. Iran payroll remains deferred until validated business and legal rules are supplied.",
+          "Deployment, rollback packaging, full browser acceptance, and several live external adapters remain future readiness work."
+        ]}
+      ]
+    },
+    {
+      "id": "technical-foundation",
+      "type": "cards",
+      "eyebrow": "TECHNICAL FOUNDATION",
+      "title": "Application architecture and runtime model",
+      "cards": [
+        {"title": "Laravel application", "text": "Laravel 13 on PHP 8.3+ with server-rendered application flows, controllers, services, policies through service checks, and relational persistence."},
+        {"title": "Database-backed runtime", "text": "Database sessions and queues are first-class. Stateful workflows rely on durable records, version fields, audit events, and idempotency keys."},
+        {"title": "Frontend delivery", "text": "Blade/Vite assets are local rather than CDN-dependent. The UI supports light, dark, and system themes plus Persian RTL rendering."},
+        {"title": "Authentication", "text": "Laravel Fortify provides account authentication, password reset, password confirmation, and optional TOTP multi-factor authentication."},
+        {"title": "Queue + scheduler", "text": "Background mail, integration processing, reminders, heartbeats, and recovery checks use database queues and the Laravel scheduler."},
+        {"title": "Language + locale", "text": "English, Persian, and Spanish are configured, with Asia/Tehran as the default user timezone and explicit timezone-aware appointment handling."}
+      ]
+    },
+    {
+      "id": "client-lifecycle",
+      "type": "text",
+      "eyebrow": "CLIENT LIFECYCLE",
+      "title": "Clients, intake, and external-source cutover",
+      "blocks": [
+        {"kind": "heading", "text": "Client visibility follows real operational relationships"},
+        {"kind": "text", "text": "The CEO can see all clients. Other users see clients they created or clients connected to work that falls inside their current visibility scope. This keeps client access aligned with operational responsibility instead of exposing the whole database."},
+        {"kind": "heading", "text": "New-source intake is intentionally unassigned"},
+        {"kind": "text", "text": "Signed post-cutover integration submissions are normalized into CRM intake records and source mappings. New external submissions enter the manager queue without an owner so assignment remains a deliberate operational action."},
+        {"kind": "heading", "text": "Cutover boundary"},
+        {"kind": "text", "text": "The current design does not attempt to seize ownership of all historical Applitent portal data. Existing records remain with the established portal; the integration boundary is for new submissions after connector cutover and for controlled source updates that do not overwrite CRM-owned fields."}
+      ]
+    }
+  ]
+}
