@@ -1,15 +1,15 @@
 # Approved Page Archetypes
 
-- `cover`: title, subtitle, eyebrow, one of five approved cover variants, direction, and (showcase mode only) an approved palette override.
-- `summary`: intro + 1-4 metric cards.
-- `text`: structured heading/text/bullet blocks with measured group height.
-- `cards`: up to six semantic information cards.
-- `chart_text`: validated line/bar data plus bounded analysis and optional source.
-- `comparison`: up to three comparable semantic items.
-- `table`: 2-6 engine-sized columns; rows wrap and grow deterministically rather than truncate.
-- `image_text`: required real image + explanation; relative asset paths resolve from report JSON.
-- `timeline`: up to six ordered steps.
-- `sources`: designed source cards/list.
-- `closing`: final statement + Nima identity and clickable resume.
+- `cover`: title, subtitle, eyebrow, one of five production cover variants, direction, and showcase-only palette override.
+- `summary`: substantive editorial intro + 1-4 genuine value cards. Values cannot be blank.
+- `text`: structured heading/text/bullet groups; groups expand across the available body.
+- `cards`: 1-6 semantic cards with optional `layout: auto|grid|bands|feature`; `auto` is preferred.
+- `chart_text`: validated line/bar data + analysis + optional source.
+- `comparison`: up to three comparable semantic items; ordering mirrors automatically in RTL.
+- `table`: 2-6 columns; cells wrap, RTL columns mirror, and substantial multi-row tables use balanced row expansion.
+- `image_text`: required real evidence image + explanation; relative paths resolve from report JSON.
+- `timeline`: up to six steps with body-aware card sizing and RTL rail mirroring.
+- `sources`: compact source cards/list; intentionally not stretched to fill the page.
+- `closing`: final statement + Nima identity and clickable visible resume URL.
 
-The strict schema rejects x/y coordinates, font sizes, margins, colors, per-card accents, table widths, custom footer/header geometry, unsupported chart types, and arbitrary extra fields.
+The schema rejects arbitrary geometry/style controls. The renderer rejects empty summary values, clipped/overflowing content, sparse compositions, missing approved fonts and malformed runtime assets.
