@@ -2,39 +2,48 @@
 
 ## Intent
 
-One variable human-facing report system. The AI chooses semantic page archetypes; the renderer owns geometry, appearance, fit behavior, and final-output verification.
+One variable human-facing report system. The AI chooses semantics; the renderer owns geometry, typography, responsive A4 composition, RTL mirroring and final-output verification.
 
 ## Fixed visual language
 
 - A4 portrait.
-- Modern Digital: technical grid, asymmetric composition, controlled gradients/glow, rounded depth, strong hierarchy.
-- Page 1 uses one approved cover variant and no visible page number. Approved variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`; all mirror for RTL.
-- Cover variants are selected semantically: signal-orbit for technical/data work; glass-panel for executive/business delivery; aurora-strata for innovation/technology; constellation for strategy/research/connected evidence; editorial-split for formal/document-heavy work. The mapping is guidance, not a hard restriction.
-- Persian/RTL cover metadata displays Nima's name as `نیما محب`; this localization is enforced by the renderer.
-- Pages 2+ use the same engine-owned navigation header and identity footer.
-- Same geometry across coordinated blue, green, purple, orange, red, and graphite palettes.
+- Modern Digital: restrained technical grid, asymmetric accents, rounded depth, strong hierarchy.
+- Approved covers: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`; all support RTL.
+- Pages 2+ use engine-owned navigation/footer chrome.
+- Interior components should occupy the page deliberately. Large dead lower areas are a composition defect, not harmless whitespace.
+- Source/citation pages are the exception: citations remain compact instead of being artificially stretched.
 
-## Typography and bidi
+## Typography
 
-- Latin: IBM Plex Sans regular/bold when bootstrapped.
-- Persian: Vazirmatn regular/medium/bold when bootstrapped.
-- Runtime survival may use suitable system fallbacks.
-- FriBidi is used when available for native bidirectional ordering and Arabic shaping. Complete LTR tokens are protected through the bidi pass so URLs, percentages, emails, versions, and multi-word English phrases stay intact.
-- Normal body target remains ~10.5-11 pt; tables ~8.2+ pt; source/caption text ~7+ pt. Content that cannot fit at the component's permitted size fails instead of being microscopically shrunk or sliced.
+- Latin: IBM Plex Sans Regular/Bold.
+- Persian: Vazirmatn Regular/Medium/Bold.
+- No production Persian fallback. Missing Vazirmatn is a hard setup failure.
+- English editorial paragraphs may use measured justification; the last line remains ragged naturally and over-wide word gaps fall back to left alignment.
+- Persian copy is normalized before shaping and must be supplied in logical Unicode order without manual bidi controls.
+- ZWNJ is preserved; BOM, soft-hyphen, LRM/RLM and bidi override/isolate artifacts are stripped.
+- Paragraph wrapping includes last-line orphan control so a single stranded word is avoided when a safe rebalance exists.
 
-## Chart integrity
+## RTL system
 
-- Line charts require labels matching every data point and show point values.
-- Bar charts use one clean rounded body per value with value labels.
-- Unsupported chart types fail schema validation.
+Persian is not a translated LTR layout. Page-title markers/navigation accents, footer identity, card order, comparison columns, table columns and timeline rails mirror automatically. Mixed Latin acronyms are isolated where needed; Persian cover titles ending in short acronyms such as `CRM` render the acronym as a separate controlled badge.
 
-## Interior layout v0.4
+## Interior composition v0.5
 
-- Section titles sit lower than the navigation rail to preserve breathing room.
-- Metric values are centered within summary cards.
-- Content and timeline cards use one consistent top accent rail; no first-card-only exception.
-- Chart pages anchor the chart immediately below the section title rather than leaving a large dead band.
-- Comparison cards use soft header fields, index pills and consistent color hierarchy.
-- Tables use a restrained light header, subtle separators and no full-width accent bar.
-- Source cards use content-sized compact rows instead of stretching to fill the page.
-- Normal footers never show `VIEW RESUME`; the closing identity card exposes the actual clickable resume URL.
+- Summary pages use a full-width editorial lead and proportionate value cards; genuine numeric metrics are large and centered.
+- Text-group cards share the available content body rather than stopping after a small fixed height.
+- `cards` supports deterministic `auto`, `grid`, `bands`, and `feature` compositions so long reports do not look like one repeated template.
+- Comparisons mirror in RTL and use the vertical body intentionally.
+- Multi-row tables distribute moderate spare height across rows; tiny tables remain compact and should be combined with related content instead of stretched absurdly.
+- Timelines calculate card height from available body height and verify each item stays inside its card.
+- Chart pages anchor the chart directly below the title and keep analysis attached to it.
+- Source cards stay compact.
+
+## Cover selection
+
+- `signal-orbit`: technical/data/engineering
+- `glass-panel`: executive/business/client
+- `aurora-strata`: innovation/AI/product
+- `constellation`: strategy/research/connected evidence
+- `editorial-split`: formal/document-heavy/legal/finance
+
+Persian/RTL cover identity renders `نیما محب`.
