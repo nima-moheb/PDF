@@ -1,21 +1,24 @@
 # Nima Report Engine
 
-A deterministic A4 report compiler for finished, human-facing PDFs. The AI supplies validated structured content; the engine owns layout, typography, themes, charts, tables, headers/footers, fit rules, rendering, and final-output QA.
+A deterministic A4 report compiler for finished human-facing PDFs. The AI supplies semantic content; the engine owns composition, typography, themes, bidi behavior, charts/tables, fit rules and rendered QA.
 
-## Guarantees
+## v0.5 guarantees
 
-- Strict archetype-specific JSON schema. Unknown layout/style controls are rejected.
-- No silent content truncation. Content either fits/wraps inside its approved component or the build fails with `FIT_FAIL`.
-- Reproducible clean builds: page PDFs and the merged PDF are byte-identical for identical inputs/runtime contract.
-- Safe surgical rebuilds: `--only page-id` fingerprints global state, page inputs, page artifacts, and evidence bytes. Global/structural changes automatically force a full rebuild; unexpected changed pages are included automatically.
-- Every final PDF is rendered to PNG at the output boundary and preflighted for A4 size, page count, renderability, non-blank output, and out-of-media-box text.
-- Persian RTL uses system FriBidi when available, with complete LTR token protection for versions, percentages, URLs, emails, and English phrases; deterministic fallback remains available.
-- Evidence image paths are resolved relative to the report JSON, not the shell working directory.
-- Schema/theme assets are packaged inside `reportkit`; editable-repository layout is not required after installation.
-- Final-output safety rejects TODO/draft/internal/debug/placeholder language.
-- Missing evidence assets are hard failures.
-- Normal-page footers contain no resume button. The closing page shows the real resume URL and that visible URL is a clickable PDF URI annotation.
-- No GitHub Actions are required for routine generation or verification.
+- Strict archetype-specific schema; no arbitrary layout coordinates.
+- No silent truncation: content wraps or fails with `FIT_FAIL`.
+- No visually empty normal pages: rendered QA measures actual content-body composition and fails with `SPARSE_PAGE_FAIL` when an archetype is materially underused.
+- Decorative grids/backgrounds do not count as content density.
+- Exact production fonts: IBM Plex Sans + Vazirmatn. Missing approved fonts fail with `FONT_SETUP_FAIL`; the engine no longer silently emits Persian reports with Noto/DejaVu fallbacks.
+- Persian copied-text normalization removes control-character artifacts while preserving ZWNJ.
+- RTL mirroring covers navigation/title markers, footer identity, card/column ordering, tables and timelines.
+- English prose supports measured justification and wrap orphan control.
+- Summary values cannot be empty; fake/blank metric cards are rejected.
+- `cards.layout:auto` provides deterministic composition variation for long reports.
+- Multi-row tables and timeline layouts use the A4 body more deliberately while preserving fit checks.
+- Clean builds are byte-reproducible; safe `--only` rebuilds fingerprint global/page/evidence state.
+- Final PDFs are reopened and rendered to PNG by PyMuPDF for output-boundary QA.
+- Normal pages contain no resume button; closing pages make the visible resume URL itself clickable.
+- No GitHub Actions are needed for routine generation/verification.
 
 ## Setup
 
@@ -23,10 +26,10 @@ A deterministic A4 report compiler for finished, human-facing PDFs. The AI suppl
 python -m venv .venv
 . .venv/bin/activate
 pip install -e .
-python scripts/bootstrap_fonts.py  # recommended exact typography
+python scripts/bootstrap_fonts.py
 ```
 
-Font bootstrap defaults to `~/.cache/nima-report-engine/fonts`; override with `REPORTKIT_FONT_DIR`.
+Font bootstrap uses pinned upstream revisions and writes to `~/.cache/nima-report-engine/fonts` by default. `REPORTKIT_FONT_DIR` may point to an approved-font directory. Do not bypass `FONT_SETUP_FAIL` with an arbitrary Persian fallback.
 
 ## Build
 
@@ -34,13 +37,7 @@ Font bootstrap defaults to `~/.cache/nima-report-engine/fonts`; override with `R
 python build.py examples/client_report.json output/report.pdf
 ```
 
-A successful build produces:
-
-- `output/report.pdf`
-- `output/pages/*.pdf` independent deterministic page artifacts
-- `output/manifest.json` fingerprints + artifact hashes + build mode
-- `output/qa/page-*.png` rendered final pages
-- `output/qa/qa_manifest.json` final PDF/render hashes and preflight measurements
+Successful output includes `report.pdf`, independent `pages/*.pdf`, `manifest.json`, rendered `qa/page-*.png`, and `qa/qa_manifest.json`.
 
 Surgical repair:
 
@@ -48,30 +45,20 @@ Surgical repair:
 python build.py examples/client_report.json output/report.pdf --only trend
 ```
 
-The engine decides whether reuse is safe. The caller does not need to know which global or local dependencies changed.
-
 ## Test
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-See `AI_USAGE.md`, `docs/DESIGN_SYSTEM.md`, `docs/COMPONENTS.md`, and `docs/ARCHITECTURE.md` before generating reports.
+Real-case layout regressions are kept in `examples/regression_crm_en.json` and `examples/regression_crm_fa.json`. Cover regressions remain in `examples/cover_showcase_en.json` and `examples/cover_showcase_fa.json`.
 
 ## Cover system
 
-Five permanent production variants are included: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, and `editorial-split`. All five render through the same production engine and all five mirror for Persian/RTL. The Persian showcase is not a separate fake template set; it is the RTL rendering of the same five engine variants.
+Five permanent production variants: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`. All use the same production renderer in LTR/RTL. The report-generating chat chooses cover + palette from content/audience rather than defaulting mechanically.
 
-The report-generating chat chooses a cover from content and audience rather than always using one default:
-
-- `signal-orbit` — technical / analytics / performance / engineering
-- `glass-panel` — executive / client / business / proposals
-- `aurora-strata` — innovation / AI / product / future-facing technology
-- `constellation` — strategy / research / roadmaps / connected evidence
-- `editorial-split` — formal research / finance / legal-policy / document-heavy work
-
-For Persian/RTL covers, Nima's displayed author name is always **نیما محب**. Theme selection remains independent from cover geometry. `meta.mode: "cover_showcase"` exists only for engine-generated comparison PDFs.
+For Persian covers, Nima's author identity is `نیما محب`. Mixed trailing acronyms such as `CRM` are rendered in a controlled Latin badge when necessary to protect the Persian title composition.
 
 ## Default ChatGPT workflow
 
-This repository is the default PDF-report pipeline for Nima. When a chat has the report content, it should structure the content as report JSON, choose an appropriate cover and palette, build with the repo, pass rendered QA, inspect output where visual judgment matters, and deliver the resulting PDF. It should not bypass the repo with an ad-hoc PDF implementation unless Nima explicitly asks for a different pipeline. The operational contract is in `AI_USAGE.md`.
+This repo is Nima's default PDF-report pipeline. Structure the source material as semantic report JSON, choose varied archetypes appropriate to the content, build with QA enabled, resolve any `FIT_FAIL`/`SPARSE_PAGE_FAIL`/`FONT_SETUP_FAIL`, inspect rendered output, then deliver the engine-generated PDF. Do not replace the pipeline with an ad-hoc PDF renderer unless Nima explicitly requests that.
