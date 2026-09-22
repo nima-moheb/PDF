@@ -38,3 +38,15 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Tables use a restrained light header, subtle separators and no full-width accent bar.
 - Source cards use content-sized compact rows instead of stretching to fill the page.
 - Normal footers never show `VIEW RESUME`; the closing identity card exposes the actual clickable resume URL.
+
+
+## Real-report density and RTL rules (v0.5)
+
+- Usable-page composition is a design requirement, not a side effect of content length. Summary, text, cards, comparison, timeline, and chart pages must carry meaningful content through the main vertical field. A large blank lower region is a failed composition.
+- The renderer may enlarge/reflow approved components and redistribute whitespace, but may not invent semantic content merely to fill space.
+- Summary metrics are visually dominant and centered. Introductory narrative is treated as a designed panel, not loose text above oversized empty cards.
+- English explanatory prose can use full-width justification. Persian remains right-aligned rather than using crude synthetic justification.
+- RTL mirrors navigation chrome, title markers, footer identity, page chips, timelines, and direction-sensitive card details.
+- Persian typography is Vazirmatn in production. Sans/UI fallback exists only for explicit test mode.
+- U+FEFF/BOM, LRM/RLM, ALM, soft hyphen, and stray bidi-isolate controls are removed before layout. Persian ZWNJ is retained.
+- Wrap balancing prevents avoidable one-word final lines in prominent cover/subtitle text.
