@@ -142,6 +142,7 @@ def _localized_cover_single_line(c, text, x, y, width, *args, **kwargs):
     kw = dict(kwargs)
     kw["font"] = "FaUI"
     kw["rtl"] = True
+    # Original decorative calls already choose suitable centering/right alignment.
     return _ORIG["draw_single_line"](c, mapped, x, y, width, *args, **kw)
 
 
@@ -152,6 +153,8 @@ def cover_v06(c, meta, p, th):
     if not rtl:
         return _ORIG["cover"](c, meta, p, th)
 
+    # All five v0.4 cover templates are preserved. Only decorative English chrome
+    # is localized; intentional English in report content (e.g. CRM) is untouched.
     previous = e.draw_single_line
     e.draw_single_line = _localized_cover_single_line
     try:
@@ -161,6 +164,8 @@ def cover_v06(c, meta, p, th):
 
 
 def _metric_value(c, value, cx, cy, radius, th, rtl):
+    # Outer halo + clean core + small orbit nodes. It makes the metric a visual
+    # anchor instead of a lonely number floating inside a large rectangle.
     c.setFillColor(e.color(th["accent"], .08)); c.circle(cx, cy, radius*1.15, fill=1, stroke=0)
     c.setStrokeColor(e.color(th["accent"], .25)); c.setLineWidth(1.1)
     c.circle(cx, cy, radius, fill=0, stroke=1)
@@ -193,6 +198,7 @@ def summary_v06(c, meta, p, th, page):
     intro_h = 42 * e.MM
     e.round_rect(c, e.SAFE_X, y-intro_h, e.W-2*e.SAFE_X, intro_h, 16,
                  fill=th["soft"], stroke="#DCE6F2", sw=.45, alpha=.78)
+    # Vertical accent is mirrored instead of relying on another horizontal rail.
     ax = e.W-e.SAFE_X-2.2*e.MM if rtl_page else e.SAFE_X+.7*e.MM
     c.setFillColor(e.color(th["accent"])); c.roundRect(ax, y-intro_h+5*e.MM, 1.5*e.MM, intro_h-10*e.MM, .75*e.MM, fill=1, stroke=0)
     e.draw_text(c, p["intro"], e.SAFE_X+9*e.MM, y-10*e.MM,
@@ -235,6 +241,7 @@ def comparison_v06(c, meta, p, th, page):
         c.setFillColor(e.color(th["soft"],.92)); c.roundRect(x+2*e.MM, yy+h-59*e.MM, w-4*e.MM, 53*e.MM, 12, fill=1, stroke=0)
 
         index=_fa_digits(f"{i+1:02d}") if rtl_page else f"{i+1:02d}"
+        # Large index watermark + metric/value medallion.
         e.draw_single_line(c,index,x+7*e.MM,yy+h-20*e.MM,w-14*e.MM,
                            size=27,min_size=23,bold=True,colorv=th["accent"],
                            align="right" if rtl_page else "left",rtl=rtl_page)
@@ -250,6 +257,7 @@ def comparison_v06(c, meta, p, th, page):
         c.setStrokeColor(e.color(th["accent"],.18)); c.setLineWidth(.7)
         c.line(x+7*e.MM,yy+h-102*e.MM,x+w-7*e.MM,yy+h-102*e.MM)
         bullets=item["bullets"]
+        # Distribute the bullets through the remaining body instead of packing them at the top.
         body_top=yy+h-116*e.MM; body_bottom=yy+14*e.MM
         slot=(body_top-body_bottom)/max(len(bullets),1)
         for j,bullet in enumerate(bullets):
@@ -269,6 +277,7 @@ def timeline_v06(c, meta, p, th, page):
 
     previous = e.pill
     def rtl_pill(c2, text, x, y, w, h, th2, dark=False):
+        # Timeline indices are chrome, so use Persian digits in RTL reports.
         return _index_badge(c2, str(text), x, y, w, h, th2, rtl=True)
     e.pill = rtl_pill
     try:
@@ -278,6 +287,7 @@ def timeline_v06(c, meta, p, th, page):
 
 
 def closing_v06(c, meta, p, th, page):
+    # Use v0.4/v0.5 closing, but localize decorative English chrome for Persian.
     rtl = e.is_fa(p.get("title", "")) or e.is_fa(p.get("text", ""))
     if not rtl:
         return _ORIG["closing"](c, meta, p, th, page)
