@@ -52,3 +52,11 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Wrap balancing prevents avoidable one-word final lines in prominent cover/subtitle text.
 
 - Layout diversity is enforced for long reports: no more than two consecutive `cards` or `text` pages, and neither may dominate more than 55% of interior pages. Repetition is a failed information architecture, not a valid way to fill a report.
+
+## Persian polish v0.6
+
+- Zero-width join controls belong to shaping, never to visible glyph output. After bidi shaping, Unicode format controls are removed from the visual run before font measurement/drawing.
+- RTL engine chrome is Persian-only. English is allowed only when it is intentional source content, such as a product/acronym, version, URL, or proper name.
+- Persian page counters read naturally (`صفحه N از M`) and use Persian digits.
+- Metric pages use visual medallions/halos and dominant 36pt+ values rather than small centered numerals in empty rectangles.
+- Comparison/access-model cards use large Persian step numbers plus a separate semantic-value medallion, with bullet content distributed through the lower field.
