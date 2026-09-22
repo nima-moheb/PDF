@@ -41,3 +41,9 @@ The five cover variants are production code paths, not temporary experiments. Th
 The public package installs `reportkit.visual_v05` over the stable v0.4 semantic renderer. The layer owns text normalization, production Persian font gating, adaptive density composition, RTL chrome mirroring, paragraph justification, and post-build density QA.
 
 After ordinary merged-PDF render QA succeeds, v0.5 performs a semantic density pass using the known page archetypes. Pages that are technically valid but visually abandon the lower sheet fail with `QA_DENSITY_FAIL`. This turns the real-world "two-thirds empty" failure into a reproducible build error rather than a subjective review note.
+
+## v0.6 final-glyph layer
+
+`reportkit.visual_v06` is installed after v0.5. Its most important boundary is between bidi shaping and ReportLab glyph drawing: semantic controls such as ZWNJ are allowed to influence shaping, then Unicode format controls are stripped from the final visual runs before width calculation and drawing. This prevents viewer-specific control-glyph artifacts without destroying Persian word joining semantics.
+
+The same layer localizes RTL decorative chrome and owns the v0.6 summary/comparison visual components. Tests inspect the generated PDFs with PyMuPDF to assert that ZWNJ is absent from final extracted glyph text, Persian cover chrome contains no English engine labels, page chrome is localized, and summary metrics render at dominant size.

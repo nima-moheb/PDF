@@ -93,3 +93,15 @@ Real Nika CRM production reports exposed failure modes that synthetic samples di
 For a Persian report, run `python scripts/bootstrap_fonts.py` before the build. Automated tests may set `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1`; finished deliverables must not.
 
 - Executive summaries must be substantive when the source is substantive: synthesize the important findings in supported prose, then reinforce them with metrics. Density is not permission to inflate empty components around weak content.
+
+## v0.6 Persian polish
+
+v0.6 closes defects visible in real PDF viewers rather than only in source/QA extraction:
+
+- ZWNJ and other format controls are retained for bidi/shaping but stripped before ReportLab draws glyphs, preventing the thin line seen inside words such as `می‌شوند`.
+- all five RTL covers localize decorative English chrome while preserving intentional English content/acronyms;
+- Persian page counters and timeline indices use Persian language/digits;
+- summary metrics use large graphic medallions and 36pt+ values;
+- comparison pages use large numbered visual hierarchy and better vertical distribution.
+
+These rules are regression-tested against the Nika Persian fixture and the five-cover Persian showcase.

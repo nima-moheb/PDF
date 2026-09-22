@@ -74,3 +74,12 @@ When a real report exposes a visual defect, fix the reusable renderer/archetype 
 - Long reports must not repeat one cards/text template page after page. v0.5 rejects more than two consecutive `cards` or `text` pages, and rejects those archetypes when either dominates more than 55% of an interior report. Re-architect the information using comparison, timeline, table, summary, chart, sources, or other appropriate approved archetypes.
 
 - For a substantial source report, an executive summary must synthesize the actual material rather than restating a generic product description. Use enough supported prose to explain the important findings (multiple short paragraphs when warranted), then use metrics/cards as reinforcement. Do not create a visually full page by inflating empty boxes around thin content.
+
+## Persian rendering acceptance rules (v0.6)
+
+- Semantic ZWNJ is preserved through shaping/wrapping, but all zero-width/control characters are removed from the final visual glyph runs. They must never appear as visible dashes/hairlines in the PDF.
+- Persian/RTL reports use Persian-only decorative chrome. Engine labels such as REPORT, DATA / INSIGHT / IMPACT, NIMA REPORT ENGINE, STRUCTURED / FINAL, PAGE, REPORT COMPLETE, and PORTFOLIO / RESUME are localized in RTL output. Intentional English terms that are part of the report content (for example CRM, Laravel, Applitent, URLs, product names) are preserved.
+- RTL page counters use Persian language and digits (`صفحه ۲ از ۶` style).
+- Summary metrics are primary visual anchors: large 36pt+ values, graphic metric medallions, and compact supporting labels/notes. Tiny numbers floating in oversized cards are not acceptable.
+- Three-way comparison/access-model pages use large Persian step numbers, a distinct value medallion, and bullets distributed through the card body rather than leaving the lower card empty.
+- Persian timeline step indices use Persian digits.
