@@ -911,11 +911,59 @@ def timeline_v05(c, meta, p, th, page):
     items = p["items"]
     rtl = _page_rtl(meta, p)
     bottom = 33 * e.MM
-    gap = 5 * e.MM
-    h = (y - bottom - gap * (len(items) - 1)) / len(items)
-    h = min(35 * e.MM, max(27 * e.MM, h))
+    gap = 6 * e.MM
+
+    # Five- and six-step processes become a two-column process grid around a
+    # central timeline. This gives each step enough text height instead of
+    # squeezing six tiny cards down one edge.
+    if len(items) >= 5:
+        rows = math.ceil(len(items) / 2)
+        col_gap = 14 * e.MM
+        w = (e.W - 2 * e.SAFE_X - col_gap) / 2
+        h = (y - bottom - gap * (rows - 1)) / rows
+        if h < 43 * e.MM:
+            raise ValueError(f"FIT_FAIL: timeline cards too dense on {p['id']}")
+
+        cx = e.W / 2
+        c.setStrokeColor(e.color(th["accent"], 0.22))
+        c.setLineWidth(1.4)
+        c.line(cx, bottom, cx, y - 4 * e.MM)
+
+        for i, item in enumerate(items):
+            row = i // 2
+            slot = i % 2
+            visual_col = (1 - slot) if rtl else slot
+            x = e.SAFE_X + visual_col * (w + col_gap)
+            top = y - row * (h + gap)
+            yy = top - h
+            node_y = yy + h / 2
+
+            c.setFillColor(e.color(th["accent2"], 0.24))
+            c.circle(cx, node_y, 4.1 * e.MM, fill=1, stroke=0)
+            c.setFillColor(e.color(th["accent"]))
+            c.circle(cx, node_y, 1.8 * e.MM, fill=1, stroke=0)
+            edge = x if visual_col == 1 else x + w
+            c.setStrokeColor(e.color(th["accent"], 0.24))
+            c.setLineWidth(0.9)
+            c.line(cx, node_y, edge, node_y)
+
+            e.shadow_card(c, x, yy, w, h, 12, accent=th["accent"])
+            badge_x = x + w - 19 * e.MM if rtl else x + 6 * e.MM
+            e.pill(c, f"{i+1:02d}", badge_x, top - 12 * e.MM, 13 * e.MM, 7 * e.MM, th)
+            e.draw_text(
+                c, item["title"], x + 7 * e.MM, top - 24 * e.MM,
+                w - 14 * e.MM, size=10.6, bold=True, max_lines=2
+            )
+            e.draw_text(
+                c, item["text"], x + 7 * e.MM, top - 38 * e.MM,
+                w - 14 * e.MM, size=8.6, colorv="#59677A",
+                max_lines=4, justify=not e.is_fa(item["text"])
+            )
+        return
 
     line_x = e.W - e.SAFE_X - 10 * e.MM if rtl else e.SAFE_X + 10 * e.MM
+    h = (y - bottom - gap * (len(items) - 1)) / len(items)
+    h = min(47 * e.MM, max(36 * e.MM, h))
     c.setStrokeColor(e.color(th["accent"], 0.30))
     c.setLineWidth(2)
     c.line(line_x, bottom, line_x, y - 4 * e.MM)
@@ -938,30 +986,17 @@ def timeline_v05(c, meta, p, th, page):
 
         e.shadow_card(c, x, yy, cw, h, 12, accent=th["accent"])
         badge_x = x + cw - 19 * e.MM if rtl else x + 6 * e.MM
-        e.pill(c, f"{i+1:02d}", badge_x, yy + h - 12 * e.MM, 13 * e.MM, 7 * e.MM, th)
+        e.pill(c, f"{i+1:02d}", badge_x, top - 12 * e.MM, 13 * e.MM, 7 * e.MM, th)
         e.draw_text(
-            c,
-            item["title"],
-            x + 7 * e.MM,
-            yy + h - 23 * e.MM,
-            cw - 14 * e.MM,
-            size=10.7,
-            bold=True,
-            max_lines=2,
+            c, item["title"], x + 7 * e.MM, top - 24 * e.MM,
+            cw - 14 * e.MM, size=10.7, bold=True, max_lines=2
         )
         e.draw_text(
-            c,
-            item["text"],
-            x + 7 * e.MM,
-            yy + h - 35 * e.MM,
-            cw - 14 * e.MM,
-            size=8.8,
-            colorv="#59677A",
-            max_lines=3,
-            justify=not e.is_fa(item["text"]),
+            c, item["text"], x + 7 * e.MM, top - 38 * e.MM,
+            cw - 14 * e.MM, size=8.8, colorv="#59677A",
+            max_lines=4, justify=not e.is_fa(item["text"])
         )
         top = yy - gap
-
 
 def cover_v05(c, meta, p, th):
     meta2 = dict(meta)
