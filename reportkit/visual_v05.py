@@ -186,10 +186,42 @@ def wrap_v05(text, font, size, width, rtl=False):
 
 
 def draw_visual_line_v05(c, text, x, y, width, font, size, rtl, align="left"):
-    return _ORIG["draw_visual_line"](
-        c, clean_text(text), x, y, width, font, size, rtl, align=align
-    )
+    text = clean_text(text)
+    if not rtl:
+        c.setFont(font, size)
+        if align == "right":
+            c.drawRightString(x + width, y, text)
+        elif align == "center":
+            c.drawCentredString(x + width / 2, y, text)
+        else:
+            c.drawString(x, y, text)
+        return
 
+    runs = e.visual_runs(text)
+    pieces = []
+    total = 0
+    for kind, run in runs:
+        # Persian/Arabic digits are LTR for bidi ordering but must use the
+        # Persian face when the Latin font lacks those glyphs.
+        has_fa_digits = any(
+            ("\u06f0" <= ch <= "\u06f9") or ("\u0660" <= ch <= "\u0669")
+            for ch in run
+        )
+        rf = font if has_fa_digits else ("Latin" if kind == "ltr" else font)
+        rw = pdfmetrics.stringWidth(run, rf, size)
+        pieces.append((run, rf, rw))
+        total += rw
+
+    if align == "right":
+        xx = x + width - total
+    elif align == "center":
+        xx = x + (width - total) / 2
+    else:
+        xx = x
+    for run, rf, rw in pieces:
+        c.setFont(rf, size)
+        c.drawString(xx, y, run)
+        xx += rw
 
 def draw_single_line_v05(
     c,
