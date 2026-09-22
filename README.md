@@ -91,3 +91,5 @@ Real Nika CRM production reports exposed failure modes that synthetic samples di
 - real English/Persian regression fixtures in `examples/real_case_regression_*.json`.
 
 For a Persian report, run `python scripts/bootstrap_fonts.py` before the build. Automated tests may set `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1`; finished deliverables must not.
+
+- Executive summaries must be substantive when the source is substantive: synthesize the important findings in supported prose, then reinforce them with metrics. Density is not permission to inflate empty components around weak content.
