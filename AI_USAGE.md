@@ -70,3 +70,5 @@ The 22 September 2026 Nika CRM English/Persian reports are regression evidence f
 - Timeline geometry mirrors for RTL and uses the full page field; comparison cards also mirror bullets/badges and occupy the available content height.
 
 When a real report exposes a visual defect, fix the reusable renderer/archetype first and add a regression case. Do not patch the exported PDF by hand.
+
+- Long reports must not repeat one cards/text template page after page. v0.5 rejects more than two consecutive `cards` or `text` pages, and rejects those archetypes when either dominates more than 55% of an interior report. Re-architect the information using comparison, timeline, table, summary, chart, sources, or other appropriate approved archetypes.
