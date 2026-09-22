@@ -213,6 +213,23 @@ class EngineTests(unittest.TestCase):
             self.assertAlmostEqual(float(rd.pages[0].mediabox.height), 841.8898, places=1)
 
 
+    def test_v05_rejects_repetitive_cards_report(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        card = cfg["pages"][3]
+        cfg["pages"] = [
+            cfg["pages"][0],
+            *[
+                dict(card, id=f"role-{i}", title=f"نقش {i}")
+                for i in range(1, 7)
+            ],
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "x.json"
+            out = Path(td) / "r.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            with self.assertRaisesRegex(RuntimeError, "QA_VARIETY_FAIL"):
+                build(inp, out)
+
     def test_v05_strips_pasted_invisible_controls_but_keeps_zwnj(self):
         self.assertEqual(clean_text("خ\ufeffلاصه نقش\u200fها"), "خلاصه نقشها")
         self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")
