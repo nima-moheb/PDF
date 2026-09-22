@@ -75,3 +75,21 @@ For Persian/RTL covers, Nima's displayed author name is always **نیما محب
 ## Default ChatGPT workflow
 
 This repository is the default PDF-report pipeline for Nima. When a chat has the report content, it should structure the content as report JSON, choose an appropriate cover and palette, build with the repo, pass rendered QA, inspect output where visual judgment matters, and deliver the resulting PDF. It should not bypass the repo with an ad-hoc PDF implementation unless Nima explicitly asks for a different pipeline. The operational contract is in `AI_USAGE.md`.
+
+
+## v0.5 real-report hardening
+
+Real Nika CRM production reports exposed failure modes that synthetic samples did not. v0.5 makes those cases part of the engine contract:
+
+- adaptive page-density composition for summary/text/cards/comparison/timeline pages;
+- `QA_DENSITY_FAIL` for pages whose meaningful content stops too high on the sheet;
+- justified English explanatory paragraphs;
+- mirrored RTL navigation/header/footer geometry;
+- Persian input-control normalization while preserving ZWNJ;
+- production Persian font gate: Vazirmatn must be bootstrapped instead of silently using Naskh;
+- balanced final-line wrapping to avoid one-word cover/subtitle widows;
+- real English/Persian regression fixtures in `examples/real_case_regression_*.json`.
+
+For a Persian report, run `python scripts/bootstrap_fonts.py` before the build. Automated tests may set `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1`; finished deliverables must not.
+
+- Executive summaries must be substantive when the source is substantive: synthesize the important findings in supported prose, then reinforce them with metrics. Density is not permission to inflate empty components around weak content.

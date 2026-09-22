@@ -53,3 +53,24 @@ When Nima asks for a report/PDF and provides the content or source material, thi
 5. Build through `build.py` with QA enabled. Source generation alone is not completion.
 6. Inspect the rendered QA pages when layout judgment matters and correct the report JSON/engine if necessary.
 7. Deliver the final engine-generated PDF. Do not substitute a one-off PDF made through a different rendering pipeline unless Nima explicitly asks to abandon this repo.
+
+
+## Real-report acceptance rules (v0.5)
+
+The 22 September 2026 Nika CRM English/Persian reports are regression evidence for the following non-negotiable rules:
+
+- A page is not successful merely because nothing overflows. For `summary`, `text`, `cards`, `comparison`, `timeline`, and `chart_text`, final QA enforces a minimum meaningful vertical content reach. Mostly-empty pages fail with `QA_DENSITY_FAIL` and must be recomposed.
+- Summary pages use a designed intro panel plus compact metric cards with dominant centered values. Do not place four small metrics at the top and leave the lower page blank.
+- Text/card pages distribute their components through the usable page field. Do not cap card expansion in a way that leaves the lower third or half unused.
+- English multi-line explanatory paragraphs are justified when appropriate. Short labels, card titles, notes, and Persian text are not force-justified.
+- Persian/RTL page chrome is mirrored: navigation marker/accent on the right, report identity on the right, page chip on the left. Interior titles are right-anchored with proper separation from eyebrows/navigation.
+- Persian source text is normalized before measurement/rendering. BOM/FEFF, directional marks, soft hyphens, and pasted bidi-isolate controls are stripped; semantic ZWNJ is preserved.
+- Persian production output requires bootstrapped Vazirmatn. If it is not available, the build fails with `FONT_SETUP_FAIL` instead of silently shipping an unapproved Naskh-style fallback. Run `python scripts/bootstrap_fonts.py`, then rebuild. `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1` is for automated portability tests only, not client deliverables.
+- Cover and paragraph wrapping includes widow control so a single short word is not stranded on a final line when a balanced reflow is possible.
+- Timeline geometry mirrors for RTL and uses the full page field; comparison cards also mirror bullets/badges and occupy the available content height.
+
+When a real report exposes a visual defect, fix the reusable renderer/archetype first and add a regression case. Do not patch the exported PDF by hand.
+
+- Long reports must not repeat one cards/text template page after page. v0.5 rejects more than two consecutive `cards` or `text` pages, and rejects those archetypes when either dominates more than 55% of an interior report. Re-architect the information using comparison, timeline, table, summary, chart, sources, or other appropriate approved archetypes.
+
+- For a substantial source report, an executive summary must synthesize the actual material rather than restating a generic product description. Use enough supported prose to explain the important findings (multiple short paragraphs when warranted), then use metrics/cards as reinforcement. Do not create a visually full page by inflating empty boxes around thin content.
