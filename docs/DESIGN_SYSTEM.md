@@ -50,3 +50,5 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Persian typography is Vazirmatn in production. Sans/UI fallback exists only for explicit test mode.
 - U+FEFF/BOM, LRM/RLM, ALM, soft hyphen, and stray bidi-isolate controls are removed before layout. Persian ZWNJ is retained.
 - Wrap balancing prevents avoidable one-word final lines in prominent cover/subtitle text.
+
+- Layout diversity is enforced for long reports: no more than two consecutive `cards` or `text` pages, and neither may dominate more than 55% of interior pages. Repetition is a failed information architecture, not a valid way to fill a report.
