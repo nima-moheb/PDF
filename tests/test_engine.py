@@ -4,6 +4,7 @@ import copy
 import hashlib
 import json
 import tempfile
+import fitz
 import unittest
 from pathlib import Path
 
@@ -267,6 +268,54 @@ class EngineTests(unittest.TestCase):
             inp.write_text(json.dumps(cfg))
             with self.assertRaisesRegex(RuntimeError, "QA_DENSITY_FAIL"):
                 build(inp, out)
+
+
+    def test_v06_persian_output_never_draws_zwnj_controls(self):
+        src = ROOT / "examples" / "real_case_regression_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "fa.pdf"
+            build(src, out)
+            doc = fitz.open(out)
+            extracted = "\n".join(page.get_text() for page in doc)
+            self.assertNotIn("\u200c", extracted)
+            self.assertNotIn("\u200d", extracted)
+
+    def test_v06_persian_cover_has_no_english_decorative_chrome(self):
+        src = ROOT / "examples" / "cover_showcase_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "covers.pdf"
+            build(src, out)
+            extracted = "\n".join(page.get_text() for page in fitz.open(out)).upper()
+            for token in (
+                "NIMA REPORT ENGINE",
+                "STRUCTURED / FINAL",
+                "DATA / INSIGHT / IMPACT",
+                "REPORT COMPLETE",
+            ):
+                self.assertNotIn(token, extracted)
+
+    def test_v06_summary_metrics_are_visually_dominant(self):
+        src = ROOT / "examples" / "real_case_regression_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "fa.pdf"
+            build(src, out)
+            page = fitz.open(out)[1]
+            found = []
+            for block in page.get_text("dict")["blocks"]:
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        if span.get("text", "").strip() in {"۷", "۳", "۵", "۲"}:
+                            found.append(float(span["size"]))
+            self.assertEqual(len(found), 4)
+            self.assertTrue(all(size >= 36 for size in found), found)
+
+    def test_v06_persian_page_chrome_is_localized(self):
+        src = ROOT / "examples" / "real_case_regression_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "fa.pdf"
+            build(src, out)
+            extracted = "\n".join(page.get_text() for page in fitz.open(out)[1:]).upper()
+            self.assertNotIn("PAGE", extracted)
 
 
 if __name__ == "__main__":
