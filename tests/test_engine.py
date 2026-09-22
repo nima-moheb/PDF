@@ -11,7 +11,9 @@ from jsonschema import ValidationError, validate
 from pypdf import PdfReader
 from PIL import Image
 
-from reportkit.engine import SCHEMA, _cover_meta_cells, build, scrub
+from reportkit import build
+from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
+from reportkit.visual_v05 import clean_text
 from reportkit.rtl import visual_runs, visual_rtl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +25,11 @@ def file_sha(path):
 
 
 class EngineTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import os
+        os.environ["REPORTKIT_ALLOW_PERSIAN_FALLBACK"] = "1"
+
     def test_public_safety_rejects_internal_language(self):
         with self.assertRaises(ValueError):
             scrub({"x": "TODO: tell Nima later"})
@@ -204,6 +211,45 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(len(rd.pages), 2)
             self.assertAlmostEqual(float(rd.pages[0].mediabox.width), 595.2756, places=1)
             self.assertAlmostEqual(float(rd.pages[0].mediabox.height), 841.8898, places=1)
+
+
+    def test_v05_strips_pasted_invisible_controls_but_keeps_zwnj(self):
+        self.assertEqual(clean_text("خ\ufeffلاصه نقش\u200fها"), "خلاصه نقشها")
+        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")
+
+    def test_v05_real_case_regressions_render(self):
+        for name, pages in (
+            ("real_case_regression_en.json", 4),
+            ("real_case_regression_fa.json", 6),
+        ):
+            src = ROOT / "examples" / name
+            with tempfile.TemporaryDirectory() as td:
+                out = Path(td) / "case.pdf"
+                build(src, out)
+                self.assertEqual(len(PdfReader(out).pages), pages)
+                self.assertTrue((Path(td) / "qa" / f"page-{pages:03d}.png").exists())
+
+    def test_v05_density_guard_rejects_short_single_group_page(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_en.json").read_text())
+        cfg["pages"] = [
+            cfg["pages"][0],
+            {
+                "id": "too-empty",
+                "type": "text",
+                "title": "Too empty",
+                "eyebrow": "TEST",
+                "blocks": [
+                    {"kind": "heading", "text": "One point"},
+                    {"kind": "text", "text": "Short."},
+                ],
+            },
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "x.json"
+            out = Path(td) / "r.pdf"
+            inp.write_text(json.dumps(cfg))
+            with self.assertRaisesRegex(RuntimeError, "QA_DENSITY_FAIL"):
+                build(inp, out)
 
 
 if __name__ == "__main__":
