@@ -1071,8 +1071,44 @@ def _density_check(pdf_path, cfg):
         )
 
 
+def _variety_check(cfg):
+    if cfg.get("meta", {}).get("mode", "report") != "report":
+        return
+    interior = [
+        p.get("type")
+        for p in cfg.get("pages", [])
+        if p.get("type") not in ("cover", "closing")
+    ]
+    if len(interior) < 6:
+        return
+
+    run_type = None
+    run = 0
+    for typ in interior:
+        if typ == run_type:
+            run += 1
+        else:
+            run_type = typ
+            run = 1
+        if typ in ("cards", "text") and run > 2:
+            raise RuntimeError(
+                f"QA_VARIETY_FAIL: {run} consecutive {typ} pages. "
+                "Recompose the report with different approved archetypes/layouts "
+                "instead of repeating one template."
+            )
+
+    for typ in ("cards", "text"):
+        count = interior.count(typ)
+        if count / len(interior) > 0.55:
+            raise RuntimeError(
+                f"QA_VARIETY_FAIL: {typ} pages are {count}/{len(interior)} of the report. "
+                "Use a more varied content architecture."
+            )
+
+
 def build_v05(config_path, out_pdf, only_ids=None, run_qa=True):
     cfg = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    _variety_check(cfg)
     e._V05_REQUIRE_PERSIAN = _contains_persian(cfg)
     try:
         result = _ORIG["build"](
