@@ -34,3 +34,10 @@ The build fails on malformed archetype content, banned internal text, missing ev
 
 Cover comparison fixtures live in `examples/cover_showcase_en.json` and `examples/cover_showcase_fa.json`. They are rendered by the same production cover renderer and are not mockups or exported images. Visual changes must be verified by building these fixtures plus `examples/client_report.json` and rendering the resulting PDFs.
 The five cover variants are production code paths, not temporary experiments. The Persian fixture must also verify localized author identity (`نیما محب`) while exercising the exact same variant implementations in RTL mode.
+
+
+## v0.5 visual acceptance stage
+
+The public package installs `reportkit.visual_v05` over the stable v0.4 semantic renderer. The layer owns text normalization, production Persian font gating, adaptive density composition, RTL chrome mirroring, paragraph justification, and post-build density QA.
+
+After ordinary merged-PDF render QA succeeds, v0.5 performs a semantic density pass using the known page archetypes. Pages that are technically valid but visually abandon the lower sheet fail with `QA_DENSITY_FAIL`. This turns the real-world "two-thirds empty" failure into a reproducible build error rather than a subjective review note.
