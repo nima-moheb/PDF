@@ -1,55 +1,64 @@
 # AI Usage Contract
 
-This repository is a report compiler. The AI supplies semantic content; the engine owns presentation and verification.
+This repository is Nima's default PDF-report compiler. The AI supplies semantic content; the engine owns presentation, page composition, typography, bidi behavior, and verification.
 
 ## Absolute rules
 
 - A generated PDF is always a finished deliverable for another human.
 - Never include TODO, draft watermark, internal/manager/CEO note, debug text, placeholder text, prompt text, reasoning, generator commentary, or instructions to Nima.
-- Do not provide coordinates, font sizes, margins, colors, table widths, per-card accents, header/footer overrides, or chart styling in report JSON. The strict schema rejects them.
-- Select approved archetypes and provide content only.
-- Never shorten content by slicing/truncating fields to make them fit. A `FIT_FAIL` means shorten without losing meaning, split content into another page, or choose another approved archetype.
-- Missing evidence/screenshot assets are build failures. Never substitute decorative fake evidence.
-- Evidence paths may be relative to the report JSON.
-- Page 1 has no visible page number. Pages 2+ use deterministic engine-owned navigation/footer components.
-- Use `--only <page-id>` for local corrections. The engine verifies whether surgery is actually safe and expands/invalidates it automatically when dependencies changed.
-- Do not treat source generation as success. A successful default build must pass final merged-PDF rendered QA and produce the `qa/` artifacts.
+- Do not provide coordinates, font sizes, margins, colors, table widths, per-card accents, header/footer overrides, or chart styling in report JSON. The schema rejects them.
+- Never silently truncate. `FIT_FAIL` means recompose, split, or shorten without losing meaning.
+- Never ship a page merely because everything technically fits. Default QA rejects materially sparse compositions with `SPARSE_PAGE_FAIL`.
+- Do not stretch decorative elements or invent filler to satisfy density. Consolidate related content, add substantive explanation supported by the source, or choose a more appropriate archetype.
+- Missing evidence/screenshot assets are build failures. Never substitute fake evidence.
+- Use `--only <page-id>` only for local corrections; the engine expands or invalidates surgery when dependencies changed.
+- Source generation is not completion. Build with QA enabled and inspect rendered pages before delivery when visual judgment matters.
+
+## Typography and Persian text
+
+- Production Latin typography is IBM Plex Sans.
+- Production Persian typography is Vazirmatn Regular/Medium/Bold. These fonts are mandatory: the renderer must fail with `FONT_SETUP_FAIL` rather than silently fall back to Noto/DejaVu or another Persian face.
+- If fonts are missing, run `python scripts/bootstrap_fonts.py` or provision the pinned files through `REPORTKIT_FONT_DIR`, then rebuild.
+- The engine normalizes copied Persian text before layout: Unicode NFC, Arabic Yeh/Kaf normalization, and removal of BOM/soft-hyphen/zero-width/bidi-control artifacts. ZWNJ is preserved.
+- Do not insert invisible bidi/control characters to force Persian layout. Supply normal logical-order Unicode text.
+- Mixed English, versions, percentages, URLs and product names remain atomic through the bidi pass.
 
 ## Approved archetypes
 
 `cover`, `summary`, `text`, `cards`, `chart_text`, `comparison`, `table`, `image_text`, `timeline`, `sources`, `closing`.
 
-## Visual identity
+### Composition rules
 
-- A4 portrait, Modern Digital.
-- Themes: blue, green, purple, orange, red, graphite.
-- Latin: IBM Plex Sans when bootstrapped.
-- Persian: Vazirmatn when bootstrapped.
-- Mixed Persian/English/numbers/URLs must remain readable and atomic where appropriate.
-- Normal-page footers do not show a resume control. On a closing page, the visible `nima-moheb.github.io/myCV/` URL itself is the clickable PDF URI annotation.
+- Choose archetypes by meaning, not by habit. Long reports must not repeat the same card grid for every section when another archetype represents the content better.
+- `summary` is for a substantive editorial lead plus 1-4 genuine values. Summary-card `value` cannot be empty. If there is no meaningful metric/value, use `cards` or `text` instead of creating fake/blank metrics.
+- English editorial/body prose is justified where the component supports it; the final line stays natural.
+- `cards.layout` may be `auto`, `grid`, `bands`, or `feature`. Prefer `auto`; it varies composition deterministically from content/page identity while preserving semantics.
+- RTL page chrome, card ordering, comparison ordering, table columns and timeline rails mirror automatically. Do not manually reverse arrays for Persian.
+- Source pages intentionally remain compact; do not stretch citations just to fill A4.
 
 ## Cover selection
 
-All five cover variants are permanent production templates. Choose the variant from the report's content and audience; do not mechanically default to one design and do not ask Nima to choose unless the request itself makes visual direction a meaningful decision.
+All five cover variants are permanent production templates. Choose from content and audience; do not mechanically default to one and do not ask Nima unless visual direction is itself a real decision.
 
-- `signal-orbit`: technical, analytical, performance, SEO, infrastructure, data-heavy, engineering.
-- `glass-panel`: executive, client-facing, business review, proposal, management summary, polished corporate delivery.
-- `aurora-strata`: innovation, AI, product, technology, future-facing, creative technical work.
-- `constellation`: strategy, research, roadmap, multi-source evidence, systems and connected findings.
-- `editorial-split`: formal research, finance, legal/policy-style material, evidence-heavy or document-centric reports.
+- `signal-orbit`: technical, analytical, performance, SEO, infrastructure, engineering.
+- `glass-panel`: executive, client-facing, business review, proposal, management summary.
+- `aurora-strata`: innovation, AI, product, future-facing technology.
+- `constellation`: strategy, research, roadmap, multi-source evidence, connected systems.
+- `editorial-split`: formal research, finance, legal/policy-style, evidence-heavy/document-centric.
 
-Theme is selected independently from the approved palettes: blue for general/technical, green for growth/operations, purple for innovation/creative work, orange for strategy/opportunity, red for risk/critical findings, graphite for formal/neutral material. These are selection heuristics, not rigid category locks.
+Theme is independent: blue general/technical, green growth/operations, purple innovation/creative, orange strategy/opportunity, red risk/critical, graphite formal/neutral.
 
-Every variant supports LTR and RTL. For Persian/RTL covers, Nima's displayed author identity is `نیما محب`; the renderer enforces this even if upstream metadata still contains `Nima Moheb`. `cover_showcase` mode exists only for engine-generated visual comparison PDFs. Ordinary reports contain exactly one cover.
+Every cover supports LTR and RTL. Persian/RTL covers display Nima as `نیما محب`, even if upstream metadata contains `Nima Moheb`. Mixed trailing acronyms such as `CRM` are separated into a controlled Latin badge instead of being allowed to destabilize the Persian title line.
 
 ## Default ChatGPT report workflow
 
-When Nima asks for a report/PDF and provides the content or source material, this repository is the default production path:
+When Nima asks for a PDF report and provides content/sources:
 
-1. Convert the content into the semantic report JSON; do not hand-design coordinates or bypass the engine.
-2. Choose the cover variant and palette from the content, audience, seriousness, and visual tone using the guidance above.
-3. Choose the interior archetypes that best express the content. Add pages when needed instead of shrinking or truncating content.
-4. Use Persian/RTL mode when the report is Persian; keep mixed English, versions, percentages and URLs intact.
-5. Build through `build.py` with QA enabled. Source generation alone is not completion.
-6. Inspect the rendered QA pages when layout judgment matters and correct the report JSON/engine if necessary.
-7. Deliver the final engine-generated PDF. Do not substitute a one-off PDF made through a different rendering pipeline unless Nima explicitly asks to abandon this repo.
+1. Use this repository unless Nima explicitly requests a different pipeline.
+2. Convert content into semantic report JSON; do not hand-design coordinates.
+3. Choose cover, palette, and varied interior archetypes from content/audience.
+4. Prefer substantive page composition over maximizing page count. Consolidate thin sections before creating sparse pages.
+5. Build with `build.py` and QA enabled.
+6. If the build raises `FIT_FAIL`, `FONT_SETUP_FAIL`, or `SPARSE_PAGE_FAIL`, fix the cause; do not bypass the check with another renderer.
+7. Inspect the rendered QA PNGs for typography, RTL behavior, orphan lines, hierarchy, balance, and clipping.
+8. Deliver the repo-generated PDF only after the actual rendered boundary passes.
