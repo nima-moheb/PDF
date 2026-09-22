@@ -708,11 +708,16 @@ def text_page_v05(c, meta, p, th, page):
             15,
             accent=th["accent"],
         )
-        idx_x = e.SAFE_X + 7 * e.MM if not rtl_page else e.W - e.SAFE_X - 22 * e.MM
+        idx_x = e.SAFE_X + 7 * e.MM if rtl_page else e.W - e.SAFE_X - 22 * e.MM
         e.pill(c, f"{gi:02d}", idx_x, top - 13 * e.MM, 15 * e.MM, 7.5 * e.MM, th)
 
         tx = e.SAFE_X + 9 * e.MM
-        cy = top - 11 * e.MM
+        content_h = _group_content_height(group, tw)
+        top_pad = max(
+            13 * e.MM,
+            min(24 * e.MM, (card_h - content_h) / 2 + 7 * e.MM),
+        )
+        cy = top - top_pad
         if group["title"]:
             cy = e.draw_text(
                 c,
