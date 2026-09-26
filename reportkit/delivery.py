@@ -92,14 +92,21 @@ def verify_delivery(
 
     persian = _contains_persian(cfg) if cfg is not None else bool(_PERSIAN_RE.search(extracted))
     fonts = _font_names(doc)
-    if persian and not allow_test_font_fallback:
-        if not any("Vazirmatn" in name for name in fonts):
-            errors.append("Persian production PDF does not embed Vazirmatn")
+    if persian:
+        approved_persian = any(
+            ("Vazirmatn" in name) or ("DejaVuSans" in name)
+            for name in fonts
+        )
+        if not approved_persian and not allow_test_font_fallback:
+            errors.append(
+                "Persian production PDF does not embed an approved Persian sans "
+                "(Vazirmatn or validated DejaVu Sans)"
+            )
         bad_arabic = [
             name for name in fonts
             if "NotoSansArabic" in name or "NotoNaskhArabic" in name
         ]
-        if bad_arabic:
+        if bad_arabic and not allow_test_font_fallback:
             errors.append(
                 "unapproved Persian fallback font embedded: " + ", ".join(sorted(bad_arabic))
             )
