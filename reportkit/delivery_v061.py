@@ -20,6 +20,7 @@ def _runtime_contract_hash_v061():
         Path(e.__file__).with_name("qa.py"),
         Path(e.__file__).with_name("visual_v05.py"),
         Path(e.__file__).with_name("visual_v06.py"),
+        Path(e.__file__).with_name("visual_v062.py"),
         Path(e.__file__).with_name("delivery.py"),
         Path(__file__),
     ):
