@@ -16,6 +16,14 @@ from . import engine as e
 _INSTALLED = False
 _ORIG = {}
 
+_PERSIAN_CANONICALIZE = str.maketrans({
+    "ي": "ی",
+    "ى": "ی",
+    "ك": "ک",
+    "ة": "ه",
+    "ۀ": "هٔ",
+})
+
 _STRIP_CODEPOINTS = {
     0xFEFF: None,
     0x200E: None,
@@ -36,7 +44,7 @@ def clean_text(value) -> str:
     Invisible controls that produced visible hairlines/missing glyphs in real reports
     are stripped.
     """
-    text = unicodedata.normalize("NFC", str(value or "")).translate(_STRIP_CODEPOINTS)
+    text = unicodedata.normalize("NFC", str(value or "")).translate(_PERSIAN_CANONICALIZE).translate(_STRIP_CODEPOINTS)
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     return "\n".join(re.sub(r"[\t\u00a0 ]+", " ", line).strip() for line in text.split("\n")).strip()
 
