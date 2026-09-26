@@ -65,7 +65,7 @@ The 22 September 2026 Nika CRM English/Persian reports are regression evidence f
 - English multi-line explanatory paragraphs are justified when appropriate. Short labels, card titles, notes, and Persian text are not force-justified.
 - Persian/RTL page chrome is mirrored: navigation marker/accent on the right, report identity on the right, page chip on the left. Interior titles are right-anchored with proper separation from eyebrows/navigation.
 - Persian source text is normalized before measurement/rendering. BOM/FEFF, directional marks, soft hyphens, and pasted bidi-isolate controls are stripped; semantic ZWNJ is preserved.
-- Persian production output requires bootstrapped Vazirmatn. If it is not available, the build fails with `FONT_SETUP_FAIL` instead of silently shipping an unapproved Naskh-style fallback. Run `python scripts/bootstrap_fonts.py`, then rebuild. `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1` is for automated portability tests only, not client deliverables.
+- Persian typography is capability-gated, not network-gated. Prefer valid local Vazirmatn. If unavailable, the engine may use validated local DejaVu Sans/DejaVu Sans Bold only when those files contain the required Persian letters and Persian digits. Invalid/subset cached fonts and Naskh-style fallbacks remain rejected. `python scripts/bootstrap_fonts.py` is optional for preferred typography, not a prerequisite for offline generation.
 - Cover and paragraph wrapping includes widow control so a single short word is not stranded on a final line when a balanced reflow is possible.
 - Timeline geometry mirrors for RTL and uses the full page field; comparison cards also mirror bullets/badges and occupy the available content height.
 
@@ -98,10 +98,20 @@ The verifier rejects:
 - PDFs not produced by Nima Report Engine (missing producer/provenance metadata);
 - leaked Unicode format controls such as ZWNJ/ZWJ in the final glyph stream;
 - NUL/replacement glyphs;
-- Persian production PDFs that do not embed Vazirmatn;
+- Persian production PDFs that do not embed an approved capability-validated Persian sans (Vazirmatn preferred; DejaVu Sans allowed offline);
 - Persian PDFs that embed the Noto Arabic/Naskh fallback faces;
 - missing rendered footer/page-counter digits on pages 2+.
 
-`REPORTKIT_ALLOW_PERSIAN_FALLBACK=1` is not a delivery escape hatch. Public builds still fail the final delivery gate unless `REPORTKIT_INTERNAL_TEST=1`, which is reserved for the repo's automated tests. Never deliver an INTERNAL_TEST output.
+`REPORTKIT_INTERNAL_TEST=1` is reserved for the repo's automated tests. Never deliver an INTERNAL_TEST output. Normal production generation must pass the same glyph/provenance checks without special environment overrides.
 
 Do not rename, copy, or post-process an ad-hoc PDF and call it repaired. If the verifier fails, regenerate through this repository and fix the actual failure.
+
+
+## Adaptive semantic components (v0.6.2)
+
+- Decorative geometry must adapt to semantic content, never the reverse. Normal values such as `+۲۵ میلیون`, `حدود ۳ هفته`, `API فروشگاه`, or `WooCommerce API` are not valid reasons for `FIT_FAIL`.
+- Summary metrics automatically choose between compact circular medallions and wider metric capsules based on the value shape.
+- Comparison/access-model values use full-card adaptive capsules and may wrap to two centered lines at a readable floor.
+- Summary labels and notes may wrap within their cards instead of failing because a fixed single-line label is slightly wider in another Persian font.
+- `FIT_FAIL` is reserved for genuinely impossible semantic/page composition after adaptive layout has been exhausted, not for fixed decorative circles/pills.
+- Persian generation must remain offline-capable. Do not stop to download fonts when a validated approved local sans is available.
