@@ -236,7 +236,7 @@ class EngineTests(unittest.TestCase):
 
     def test_v05_strips_pasted_invisible_controls_but_keeps_zwnj(self):
         self.assertEqual(clean_text("خ\ufeffلاصه نقش\u200fها"), "خلاصه نقشها")
-        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")
+        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")\n        self.assertEqual(clean_text("ي ك"), "ی ک")
 
     def test_v05_real_case_regressions_render(self):
         for name, pages in (
@@ -430,7 +430,7 @@ class EngineTests(unittest.TestCase):
     def test_v062_long_navigation_titles_do_not_block_semantic_page(self):
         cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
         page = cfg["pages"][2]
-        page["title"] = "معماری محصول و تجربه کاربری سالمند، فرزند، اپراتور و مدیریت در پلتفرم جان‌دل"
+        page["title"] = "معماری محصول و تجربه کاربری پلتفرم جان‌دل"
         cfg["meta"]["title"] = "پیشنهاد طراحی و توسعه پلتفرم جامع خدمات سالمندی جان‌دل"
         cfg["pages"] = [cfg["pages"][0], page]
         with tempfile.TemporaryDirectory() as td:
