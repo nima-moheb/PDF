@@ -105,3 +105,13 @@ The verifier rejects:
 `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1` is not a delivery escape hatch. Public builds still fail the final delivery gate unless `REPORTKIT_INTERNAL_TEST=1`, which is reserved for the repo's automated tests. Never deliver an INTERNAL_TEST output.
 
 Do not rename, copy, or post-process an ad-hoc PDF and call it repaired. If the verifier fails, regenerate through this repository and fix the actual failure.
+
+## Offline Persian font rule (v0.6.2)
+
+Persian production no longer depends on live DNS/network access. The repository vendors an OFL-licensed Vazirmatn variable WOFF2 asset and materializes validated 400/500/700 static TTF instances into the runtime font cache.
+
+- Do not download Vazirmatn during ordinary report generation.
+- `python scripts/bootstrap_fonts.py` must succeed for the required Persian faces even with no network.
+- The bootstrap may attempt IBM Plex as an optional enhancement; a network failure there is non-fatal because approved Latin fallbacks exist.
+- Existing cached Vazirmatn files are not trusted by filename alone. They are checked for representative Persian letters and Persian digits; invalid/subset cache files are overwritten from the bundled asset.
+- The production delivery gate still requires Vazirmatn in the emitted Persian PDF. Offline bundling does not weaken that requirement.

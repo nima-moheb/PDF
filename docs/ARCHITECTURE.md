@@ -55,3 +55,11 @@ Rendered QA is followed by a second file-level delivery gate. It reopens the emi
 The runtime-contract fingerprint now includes `visual_v05.py`, `visual_v06.py`, `delivery.py`, and the v0.6.1 delivery wrapper, so surgical page reuse is invalidated when any of these visual/delivery rules change.
 
 This layer exists because a visually plausible PDF can still be the wrong artifact: an ad-hoc generator can omit engine metadata, use fallback fonts, leak ZWNJ as a visible dash, or lose numeric glyphs. Such a file must fail independently of its source JSON.
+
+## v0.6.2 offline font materialization
+
+The package includes `reportkit/data/Vazirmatn-Variable.woff2` plus its SIL Open Font License. On first Persian use, v0.5's font layer materializes static weights 400, 500 and 700 into `REPORTKIT_FONT_DIR` (or the standard report-engine cache) using fontTools variable-font instancing.
+
+The cached files are validated by cmap coverage for representative Persian letters and Persian digits. File existence alone is insufficient: stale subset/corrupt cache files are replaced automatically.
+
+This removes live DNS/network access from the required Persian build path while preserving the v0.6.1 final-delivery requirement that production Persian PDFs actually embed Vazirmatn.

@@ -1,6 +1,6 @@
 [project]
 name = "nima-report-engine"
-version = "0.6.1"
+version = "0.6.2"
 description = "Deterministic A4 report compiler for finished human-facing PDFs"
 requires-python = ">=3.11"
 dependencies = [
@@ -8,6 +8,7 @@ dependencies = [
   "pypdf>=5,<7",
   "jsonschema>=4,<5",
   "fonttools>=4,<5",
+  "brotli>=1,<2",
   "PyMuPDF>=1.26,<2",
 ]
 
@@ -19,4 +20,4 @@ build-backend = "setuptools.build_meta"
 packages = ["reportkit"]
 
 [tool.setuptools.package-data]
-reportkit = ["data/*.json"]
+reportkit = ["data/*.json", "data/*.woff2", "data/*.txt"]
