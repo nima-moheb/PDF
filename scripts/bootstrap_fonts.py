@@ -28,8 +28,8 @@ for weight, path in sorted(vazir.items()):
         raise RuntimeError(f"Bundled Vazirmatn {weight} failed glyph validation: {path}")
     print("OK", path.name, "(bundled/offline)")
 
-# Optional Latin faces. Failure here is non-fatal because the engine can use
-# approved installed/system Latin fallbacks.
+# Optional Latin faces. Network access is opt-in because the required PDF path must
+# remain fully offline. Set REPORTKIT_FETCH_OPTIONAL_FONTS=1 to fetch IBM Plex.
 PLEX_COMMIT = "78cd4223d8de9fcb78cba84eadecb269c56093c5"
 PLEX = {
     "IBMPlexSans-Regular.ttf": (
@@ -41,20 +41,23 @@ PLEX = {
         "packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Bold.ttf"
     ),
 }
-for name, url in PLEX.items():
-    dst = OUT / name
-    if dst.exists() and dst.stat().st_size > 50000:
-        print("OK", name)
-        continue
-    try:
-        print("OPTIONAL GET", name)
-        with urlopen(url, timeout=12) as r:
-            data = r.read()
-        if len(data) < 50000:
-            raise RuntimeError(f"Downloaded font too small: {name}")
-        dst.write_bytes(data)
-        print("OK", name)
-    except (URLError, OSError, RuntimeError) as exc:
-        print(f"WARN {name}: network unavailable; approved Latin fallback will be used ({exc})")
+if os.environ.get("REPORTKIT_FETCH_OPTIONAL_FONTS") == "1":
+    for name, url in PLEX.items():
+        dst = OUT / name
+        if dst.exists() and dst.stat().st_size > 50000:
+            print("OK", name)
+            continue
+        try:
+            print("OPTIONAL GET", name)
+            with urlopen(url, timeout=12) as r:
+                data = r.read()
+            if len(data) < 50000:
+                raise RuntimeError(f"Downloaded font too small: {name}")
+            dst.write_bytes(data)
+            print("OK", name)
+        except (URLError, OSError, RuntimeError) as exc:
+            print(f"WARN {name}: network unavailable; approved Latin fallback will be used ({exc})")
+else:
+    print("SKIP optional IBM Plex download (offline mode)")
 
 print("Required Persian fonts ready offline:", OUT)
