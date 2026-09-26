@@ -377,5 +377,36 @@ class EngineTests(unittest.TestCase):
             self.assertTrue(_font_has_persian_coverage(p))
 
 
+    def test_v062_comparison_values_adapt_instead_of_fixed_medallion_failure(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        comparison = next(p for p in cfg["pages"] if p["type"] == "comparison")
+        comparison["items"][0]["value"] = "API فروشگاه"
+        comparison["items"][1]["value"] = "WooCommerce API"
+        comparison["items"][2]["value"] = "دسترسی مدیریتی"
+        cfg["pages"] = [cfg["pages"][0], comparison]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "comparison.json"
+            out = Path(td) / "comparison.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            text = "\n".join(page.get_text() for page in fitz.open(out))
+            self.assertIn("فروشگاه", text)
+            self.assertIn("WooCommerce API", text)
+            self.assertIn("دسترسی", text)
+
+    def test_v062_summary_labels_can_wrap_without_decorative_fit_failure(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        summary = cfg["pages"][1]
+        summary["cards"][0]["label"] = "هزینه ماژول اختیاری تلفن و تماس خودکار"
+        summary["cards"][0]["note"] = "در صورت انتخاب ماژول PBX / IVR"
+        cfg["pages"] = [cfg["pages"][0], summary]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "summary-labels.json"
+            out = Path(td) / "summary-labels.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
