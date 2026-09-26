@@ -16,6 +16,7 @@ from reportkit import build
 from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
 from reportkit.delivery import verify_delivery
 from reportkit.visual_v05 import clean_text
+from reportkit.visual_v062 import _font_has_persian_coverage
 from reportkit.rtl import visual_runs, visual_rtl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -331,13 +332,13 @@ class EngineTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "missing Nima Report Engine"):
                 verify_delivery(bad)
 
-    def test_v061_delivery_gate_rejects_persian_fallback_as_production(self):
+    def test_v062_delivery_gate_accepts_approved_offline_persian_sans(self):
         src = ROOT / "examples" / "real_case_regression_fa.json"
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "fa.pdf"
             build(src, out)
-            with self.assertRaisesRegex(RuntimeError, "does not embed Vazirmatn"):
-                verify_delivery(out, src)
+            result = verify_delivery(out, src)
+            self.assertEqual(result["status"], "PASS")
 
     def test_v061_delivery_gate_accepts_repo_output_in_internal_test_mode(self):
         src = ROOT / "examples" / "real_case_regression_fa.json"
@@ -351,6 +352,29 @@ class EngineTests(unittest.TestCase):
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
+
+
+    def test_v062_wide_persian_metrics_adapt_instead_of_fit_fail(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        summary = cfg["pages"][1]
+        summary["cards"][0]["value"] = "+۲۵ میلیون"
+        summary["cards"][1]["value"] = "۱۲۰ میلیون"
+        summary["cards"][2]["value"] = "حدود ۳ هفته"
+        summary["cards"][3]["value"] = "+۳۰ میلیون"
+        cfg["pages"] = [cfg["pages"][0], summary]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "wide.json"
+            out = Path(td) / "wide.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            text = "\n".join(page.get_text() for page in fitz.open(out))
+            for value in ("+۲۵ میلیون", "۱۲۰ میلیون", "حدود ۳ هفته", "+۳۰ میلیون"):
+                self.assertIn(value.replace("\u200c", ""), text)
+
+    def test_v062_dejavu_has_required_persian_coverage_when_present(self):
+        p = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+        if p.exists():
+            self.assertTrue(_font_has_persian_coverage(p))
 
 
 if __name__ == "__main__":
