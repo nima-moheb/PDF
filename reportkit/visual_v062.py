@@ -22,6 +22,10 @@ _REQUIRED_PERSIAN_GLYPHS = set(
 )
 
 
+def _fa_digits_v062(value) -> str:
+    return str(value).translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+
+
 def _first_valid_font(*paths):
     for value in paths:
         if not value:
@@ -285,16 +289,26 @@ def summary_v062(c, meta, p, th, page):
             rtl=e.is_fa(value),
         )
 
-        e.draw_single_line(
-            c, card["label"], x+7*e.MM, yy+16*e.MM, w-14*e.MM,
-            size=10.3, min_size=8.8, bold=True,
-            colorv="#405066", align="center", rtl=e.is_fa(card["label"])
+        label = clean_text(card["label"])
+        label_rtl = e.is_fa(label)
+        _fit_centered_lines(
+            c, label,
+            x + 7*e.MM, yy + 16*e.MM,
+            w - 14*e.MM,
+            size=10.3, min_size=8.0, max_lines=2,
+            font="FaB" if label_rtl else "LatinB",
+            rtl=label_rtl, colorv="#405066", leading_factor=1.10,
         )
         if card.get("note"):
-            e.draw_single_line(
-                c, card["note"], x+7*e.MM, yy+7.5*e.MM, w-14*e.MM,
-                size=8.3, min_size=7.0, colorv="#7A8798",
-                align="center", rtl=e.is_fa(card["note"])
+            note = clean_text(card["note"])
+            note_rtl = e.is_fa(note)
+            _fit_centered_lines(
+                c, note,
+                x + 7*e.MM, yy + 7.5*e.MM,
+                w - 14*e.MM,
+                size=8.3, min_size=6.7, max_lines=2,
+                font="Fa" if note_rtl else "Latin",
+                rtl=note_rtl, colorv="#7A8798", leading_factor=1.10,
             )
 
 
@@ -390,7 +404,7 @@ def comparison_v062(c, meta, p, th, page):
             12, fill=1, stroke=0
         )
 
-        index = e._fa_digits(f"{i+1:02d}") if rtl_page else f"{i+1:02d}"
+        index = _fa_digits_v062(f"{i+1:02d}") if rtl_page else f"{i+1:02d}"
         e.draw_single_line(
             c, index, x+7*e.MM, yy+h-20*e.MM, w-14*e.MM,
             size=27, min_size=20, bold=True, colorv=th["accent"],
