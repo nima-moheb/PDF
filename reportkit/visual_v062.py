@@ -184,29 +184,35 @@ def _draw_metric_capsule(c, value, cx, cy, max_width, max_height, th, rtl):
     c.setFillColor(e.color(th["accent"], .35))
     c.circle(x + width - 6.2*e.MM, cy, 1.1*e.MM, fill=1, stroke=0)
 
-    e.draw_single_line(
+    _fit_centered_lines(
         c,
         value,
         x + 7.5*e.MM,
-        cy - 4.4*e.MM,
+        cy,
         width - 15*e.MM,
         size=target_size,
-        min_size=min_size,
-        bold=True,
-        colorv=th["deep"],
-        align="center",
+        min_size=14.0,
+        max_lines=2,
+        font="FaB" if rtl else "LatinB",
         rtl=rtl,
+        colorv=th["deep"],
+        leading_factor=1.08,
     )
 
 
 def _metric_value_v062(c, value, cx, cy, max_width, max_height, th, rtl):
     value = clean_text(value)
-    if not _is_compact_metric(value, rtl):
+    radius = min(18 * e.MM, max_height * .43, max_width * .25)
+    font = "FaB" if rtl else "LatinB"
+    compact_fits = (
+        _is_compact_metric(value, rtl)
+        and e.txt_width(value, font, 19, rtl) <= radius * 2.22
+    )
+    if not compact_fits:
         return _draw_metric_capsule(
             c, value, cx, cy, max_width, max_height, th, rtl
         )
 
-    radius = min(18 * e.MM, max_height * .43, max_width * .25)
     c.setFillColor(e.color(th["accent"], .08))
     c.circle(cx, cy, radius * 1.15, fill=1, stroke=0)
     c.setStrokeColor(e.color(th["accent"], .25))
@@ -348,6 +354,115 @@ def _fit_centered_lines(
     return chosen
 
 
+
+def _chrome_line(
+    c, text, x, y, width, *, size, min_size, font,
+    rtl, colorv, align
+):
+    """Navigation/footer duplicates are decorative and must never block delivery."""
+    try:
+        return e.draw_single_line(
+            c, text, x, y, width,
+            size=size, min_size=min_size, font=font,
+            rtl=rtl, colorv=colorv, align=align
+        )
+    except ValueError:
+        # One final chrome-only compression. If even this cannot fit, omit the
+        # duplicated navigation label; the full semantic title remains on-page.
+        try:
+            return e.draw_single_line(
+                c, text, x, y, width,
+                size=min_size, min_size=4.8, font=font,
+                rtl=rtl, colorv=colorv, align=align
+            )
+        except ValueError:
+            return None
+
+
+def header_footer_v062(c, meta, page, page_title, th):
+    rtl = e.is_fa(page_title or meta.get("title", ""))
+    if not rtl:
+        # English header from v0.5 is already roomy; temporarily soften only its
+        # duplicated titles if they exceed the navigation rail.
+        original = e.draw_single_line
+        def soft(c2, text, x, y, width, **kw):
+            try:
+                return original(c2, text, x, y, width, **kw)
+            except ValueError:
+                try:
+                    kw2 = dict(kw)
+                    kw2["min_size"] = 4.8
+                    return original(c2, text, x, y, width, **kw2)
+                except ValueError:
+                    return None
+        e.draw_single_line = soft
+        try:
+            return _ORIG["header_footer"](c, meta, page, page_title, th)
+        finally:
+            e.draw_single_line = original
+
+    total = int(meta.get("_page_count", page))
+    hy = e.H - 15.2 * e.MM
+    hh = 8.6 * e.MM
+    e.round_rect(
+        c, e.SAFE_X, hy, e.W - 2*e.SAFE_X, hh, hh/2,
+        fill="#FFFFFF", stroke="#DCE6F3", sw=.45
+    )
+    dotx = e.W - e.SAFE_X - 5*e.MM
+    c.setFillColor(e.color(th["accent2"], .22))
+    c.circle(dotx, hy + hh/2, 2.5*e.MM, fill=1, stroke=0)
+    c.setFillColor(e.color(th["accent"]))
+    c.circle(dotx, hy + hh/2, 1.15*e.MM, fill=1, stroke=0)
+
+    _chrome_line(
+        c, clean_text(meta["title"]),
+        e.W-e.SAFE_X-80*e.MM, hy+3*e.MM, 70*e.MM,
+        size=7.1, min_size=6.0, font="FaUI", rtl=True,
+        colorv="#66758A", align="right"
+    )
+    if page_title:
+        _chrome_line(
+            c, clean_text(page_title),
+            e.SAFE_X+6*e.MM, hy+3*e.MM, 70*e.MM,
+            size=7.4, min_size=6.0, font="FaUI", rtl=True,
+            colorv=th["deep"], align="left"
+        )
+    e.glow_line(
+        c, e.W-e.SAFE_X-55*e.MM, hy-.8*e.MM,
+        e.W-e.SAFE_X-10*e.MM, hy-.8*e.MM, th, .65
+    )
+
+    fy = 9.6 * e.MM
+    c.setStrokeColor(e.color("#DCE6F3"))
+    c.setLineWidth(.45)
+    c.line(e.SAFE_X, fy+5.6*e.MM, e.W-e.SAFE_X, fy+5.6*e.MM)
+    c.setStrokeColor(e.color(th["accent"], .82))
+    c.setLineWidth(1.1)
+    c.line(
+        e.W-e.SAFE_X-27*e.MM, fy+5.6*e.MM,
+        e.W-e.SAFE_X, fy+5.6*e.MM
+    )
+    _chrome_line(
+        c, "نیما محب  //  توسعه‌دهنده فول‌استک",
+        e.W-e.SAFE_X-92*e.MM, fy+1.5*e.MM, 92*e.MM,
+        size=6.8, min_size=5.8, font="FaUI", rtl=True,
+        colorv="#59687C", align="right"
+    )
+
+    pw = 33*e.MM
+    ph = 7.6*e.MM
+    px = e.SAFE_X
+    py = fy-.2*e.MM
+    e.round_rect(c, px, py, pw, ph, ph/2, fill=th["deep"])
+    _chrome_line(
+        c,
+        f"صفحه {_fa_digits_v062(page)} از {_fa_digits_v062(total)}",
+        px+3*e.MM, py+2.15*e.MM, pw-6*e.MM,
+        size=7.1, min_size=5.8, font="FaUI", rtl=True,
+        colorv="#FFFFFF", align="center"
+    )
+
+
 def _draw_comparison_value(c, value, x, y, width, height, th):
     value = clean_text(value)
     rtl = e.is_fa(value)
@@ -457,9 +572,11 @@ def install():
     _ORIG["register_fonts"] = e.register_fonts
     _ORIG["summary"] = e.summary
     _ORIG["comparison"] = e.comparison
+    _ORIG["header_footer"] = e.header_footer
 
     e.ENGINE_VERSION = "0.6.2"
     e.register_fonts = register_fonts_v062
+    e.header_footer = header_footer_v062
     e.summary = summary_v062
     e.comparison = comparison_v062
     e.RENDERERS["summary"] = summary_v062
