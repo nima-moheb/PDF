@@ -47,7 +47,7 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Summary metrics are visually dominant and centered. Introductory narrative is treated as a designed panel, not loose text above oversized empty cards.
 - English explanatory prose can use full-width justification. Persian remains right-aligned rather than using crude synthetic justification.
 - RTL mirrors navigation chrome, title markers, footer identity, page chips, timelines, and direction-sensitive card details.
-- Persian typography is Vazirmatn in production. Sans/UI fallback exists only for explicit test mode.
+- Persian typography prefers Vazirmatn. When it is unavailable offline, capability-validated DejaVu Sans is the approved production fallback; Naskh-style and incomplete subset fonts are rejected.
 - U+FEFF/BOM, LRM/RLM, ALM, soft hyphen, and stray bidi-isolate controls are removed before layout. Persian ZWNJ is retained.
 - Wrap balancing prevents avoidable one-word final lines in prominent cover/subtitle text.
 
@@ -60,3 +60,13 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Persian page counters read naturally (`صفحه N از M`) and use Persian digits.
 - Metric pages use visual medallions/halos and dominant 36pt+ values rather than small centered numerals in empty rectangles.
 - Comparison/access-model cards use large Persian step numbers plus a separate semantic-value medallion, with bullet content distributed through the lower field.
+
+
+## Adaptive value geometry v0.6.2
+
+- Circles, pills, and medallions are optional visual treatments, not semantic constraints.
+- Compact numeric metrics may use circular medallions.
+- Wider metric phrases automatically use a responsive horizontal capsule.
+- Comparison/access values use the available card width and can wrap to two centered lines at a readable size floor.
+- Summary labels/notes may wrap. Font-metric variation between Vazirmatn and DejaVu Sans must not turn ordinary Persian labels into build failures.
+- Decorative fixed widths must never cause a `FIT_FAIL` for ordinary content. Only genuinely impossible page composition may fail.
