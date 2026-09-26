@@ -15,7 +15,7 @@ from PIL import Image
 from reportkit import build
 from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
 from reportkit.delivery import verify_delivery
-from reportkit.visual_v05 import clean_text
+from reportkit.visual_v05 import clean_text, _ensure_bundled_vazirmatn, _font_has_required_persian
 from reportkit.rtl import visual_runs, visual_rtl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -351,6 +351,24 @@ class EngineTests(unittest.TestCase):
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
+
+
+    def test_v062_bundled_vazirmatn_materializes_offline_with_required_glyphs(self):
+        import os
+        previous = os.environ.get("REPORTKIT_FONT_DIR")
+        with tempfile.TemporaryDirectory() as td:
+            os.environ["REPORTKIT_FONT_DIR"] = td
+            try:
+                paths = _ensure_bundled_vazirmatn()
+                self.assertEqual(set(paths), {400, 500, 700})
+                for path in paths.values():
+                    self.assertTrue(path.exists(), path)
+                    self.assertTrue(_font_has_required_persian(path), path)
+            finally:
+                if previous is None:
+                    os.environ.pop("REPORTKIT_FONT_DIR", None)
+                else:
+                    os.environ["REPORTKIT_FONT_DIR"] = previous
 
 
 if __name__ == "__main__":
