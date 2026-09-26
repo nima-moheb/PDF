@@ -55,3 +55,12 @@ Rendered QA is followed by a second file-level delivery gate. It reopens the emi
 The runtime-contract fingerprint now includes `visual_v05.py`, `visual_v06.py`, `delivery.py`, and the v0.6.1 delivery wrapper, so surgical page reuse is invalidated when any of these visual/delivery rules change.
 
 This layer exists because a visually plausible PDF can still be the wrong artifact: an ad-hoc generator can omit engine metadata, use fallback fonts, leak ZWNJ as a visible dash, or lose numeric glyphs. Such a file must fail independently of its source JSON.
+
+
+## v0.6.2 adaptive semantic layout + offline font capability
+
+The Persian font selector validates actual cmap coverage instead of trusting filenames or requiring a network download. Valid local Vazirmatn is preferred; validated DejaVu Sans is the deterministic offline fallback. Broken/subset cached fonts are ignored.
+
+Summary and comparison semantic values are now shape-adaptive. Compact values can use circular medallions, while wider values are rendered inside responsive capsules with bounded wrapping/scaling. This removes the previous fixed-geometry failure mode where valid content such as `+۲۵ میلیون` or `API فروشگاه` caused `FIT_FAIL`.
+
+The runtime contract includes `visual_v062.py`, so surgical reuse is invalidated when these adaptive/font-capability rules change.
