@@ -563,6 +563,27 @@ def comparison_v062(c, meta, p, th, page):
                 colorv="#46566B", justify=not rtl
             )
 
+
+def _chart_label_v062(c, label, center, y, slot_width):
+    """Chart labels are semantic; wrap/shrink instead of failing on a narrow slot."""
+    label = clean_text(label)
+    rtl = e.is_fa(label)
+    _fit_centered_lines(
+        c,
+        label,
+        center - slot_width / 2,
+        y - 1.2*e.MM,
+        slot_width,
+        size=7.0,
+        min_size=5.4,
+        max_lines=2,
+        font="Fa" if rtl else "Latin",
+        rtl=rtl,
+        colorv="#69778A",
+        leading_factor=1.05,
+    )
+
+
 def install():
     global _INSTALLED
     if _INSTALLED:
@@ -573,10 +594,12 @@ def install():
     _ORIG["summary"] = e.summary
     _ORIG["comparison"] = e.comparison
     _ORIG["header_footer"] = e.header_footer
+    _ORIG["chart_label"] = getattr(e, "_chart_label", None)
 
     e.ENGINE_VERSION = "0.6.2"
     e.register_fonts = register_fonts_v062
     e.header_footer = header_footer_v062
+    e._chart_label = _chart_label_v062
     e.summary = summary_v062
     e.comparison = comparison_v062
     e.RENDERERS["summary"] = summary_v062
