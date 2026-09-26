@@ -83,3 +83,25 @@ When a real report exposes a visual defect, fix the reusable renderer/archetype 
 - Summary metrics are primary visual anchors: large 36pt+ values, graphic metric medallions, and compact supporting labels/notes. Tiny numbers floating in oversized cards are not acceptable.
 - Three-way comparison/access-model pages use large Persian step numbers, a distinct value medallion, and bullets distributed through the card body rather than leaving the lower card empty.
 - Persian timeline step indices use Persian digits.
+
+## Mandatory delivery gate (v0.6.1)
+
+Before any PDF is handed to Nima or another human, the file itself must pass the repo delivery verifier:
+
+```bash
+python scripts/verify_delivery.py output/report.pdf --config report.json
+```
+
+This is mandatory even when the file visually looks acceptable.
+
+The verifier rejects:
+- PDFs not produced by Nima Report Engine (missing producer/provenance metadata);
+- leaked Unicode format controls such as ZWNJ/ZWJ in the final glyph stream;
+- NUL/replacement glyphs;
+- Persian production PDFs that do not embed Vazirmatn;
+- Persian PDFs that embed the Noto Arabic/Naskh fallback faces;
+- missing rendered footer/page-counter digits on pages 2+.
+
+`REPORTKIT_ALLOW_PERSIAN_FALLBACK=1` is not a delivery escape hatch. Public builds still fail the final delivery gate unless `REPORTKIT_INTERNAL_TEST=1`, which is reserved for the repo's automated tests. Never deliver an INTERNAL_TEST output.
+
+Do not rename, copy, or post-process an ad-hoc PDF and call it repaired. If the verifier fails, regenerate through this repository and fix the actual failure.
