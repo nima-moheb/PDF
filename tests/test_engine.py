@@ -408,5 +408,38 @@ class EngineTests(unittest.TestCase):
             self.assertTrue(out.exists())
 
 
+    def test_v062_chart_labels_wrap_instead_of_fixed_slot_failure(self):
+        cfg = json.loads(EXAMPLE.read_text())
+        chart = next(p for p in cfg["pages"] if p["type"] == "chart_text")
+        chart["chart"]["labels"] = [
+            "هفته اول پروژه",
+            "هفته دوم پروژه",
+            "هفته سوم پروژه",
+            "هفته چهارم پروژه",
+            "هفته پنجم پروژه",
+            "هفته ششم پروژه",
+        ]
+        cfg["pages"] = [cfg["pages"][0], chart]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "chart-labels.json"
+            out = Path(td) / "chart-labels.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
+
+    def test_v062_long_navigation_titles_do_not_block_semantic_page(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        page = cfg["pages"][2]
+        page["title"] = "معماری محصول و تجربه کاربری سالمند، فرزند، اپراتور و مدیریت در پلتفرم جان‌دل"
+        cfg["meta"]["title"] = "پیشنهاد طراحی و توسعه پلتفرم جامع خدمات سالمندی جان‌دل"
+        cfg["pages"] = [cfg["pages"][0], page]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "long-nav.json"
+            out = Path(td) / "long-nav.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
