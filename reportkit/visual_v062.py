@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import math
+import json
+import unicodedata
 from pathlib import Path
 
 from fontTools.ttLib import TTFont as FontToolsTTFont
@@ -15,11 +17,32 @@ _ORIG = {}
 
 # Enough coverage to reject broken/subset "Persian" fonts while remaining
 # deterministic and independent from network access.
-_REQUIRED_PERSIAN_GLYPHS = set(
-    "ابتثجحخدذرزسشصضطظعغفقکگلمنوهیپچژگ"
-    "آأإؤئۀةكيى"
+_CORE_PERSIAN_GLYPHS = set(
+    "اآبپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"
     "۰۱۲۳۴۵۶۷۸۹"
 )
+
+
+def _persian_chars_in(value):
+    chars = set()
+    if isinstance(value, str):
+        text = clean_text(value)
+        for ch in text:
+            o = ord(ch)
+            if (
+                0x0600 <= o <= 0x06FF
+                or 0x0750 <= o <= 0x077F
+                or 0x08A0 <= o <= 0x08FF
+            ):
+                if unicodedata.category(ch) != "Cf":
+                    chars.add(ch)
+    elif isinstance(value, dict):
+        for v in value.values():
+            chars |= _persian_chars_in(v)
+    elif isinstance(value, (list, tuple)):
+        for v in value:
+            chars |= _persian_chars_in(v)
+    return chars
 
 
 def _fa_digits_v062(value) -> str:
@@ -36,13 +59,14 @@ def _first_valid_font(*paths):
     return None
 
 
-def _font_has_persian_coverage(path: Path | str | None) -> bool:
+def _font_has_persian_coverage(path: Path | str | None, required=None) -> bool:
     if not path:
         return False
     try:
         font = FontToolsTTFont(str(path), lazy=True)
         cmap = font.getBestCmap() or {}
-        return all(ord(ch) in cmap for ch in _REQUIRED_PERSIAN_GLYPHS)
+        required = set(required or _CORE_PERSIAN_GLYPHS)
+        return all(ord(ch) in cmap for ch in required)
     except Exception:
         return False
     finally:
@@ -77,10 +101,11 @@ def _pick_persian_family():
         _font_from_dirs("Vazirmatn-Medium.ttf"),
         _font_from_dirs("Vazirmatn-Bold.ttf"),
     )
+    required = set(getattr(e, "_PERSIAN_REQUIRED_CHARS", None) or _CORE_PERSIAN_GLYPHS)
     if (
-        _font_has_persian_coverage(vazir_r)
-        and _font_has_persian_coverage(vazir_b)
-        and _font_has_persian_coverage(vazir_ui)
+        _font_has_persian_coverage(vazir_r, required)
+        and _font_has_persian_coverage(vazir_b, required)
+        and _font_has_persian_coverage(vazir_ui, required)
     ):
         return "Vazirmatn", vazir_r, vazir_b, vazir_ui
 
@@ -94,7 +119,7 @@ def _pick_persian_family():
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
     )
-    if _font_has_persian_coverage(dejavu_r) and _font_has_persian_coverage(dejavu_b):
+    if _font_has_persian_coverage(dejavu_r, required) and _font_has_persian_coverage(dejavu_b, required):
         return "DejaVuSans", dejavu_r, dejavu_b, dejavu_b
 
     raise RuntimeError(
@@ -584,6 +609,27 @@ def _chart_label_v062(c, label, center, y, slot_width):
     )
 
 
+def build_v062(config_path, out_pdf, only_ids=None, run_qa=True):
+    cfg = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    required = _persian_chars_in(cfg)
+    # Page counters may use any Persian digit even when the body does not.
+    required |= set("۰۱۲۳۴۵۶۷۸۹")
+    previous = getattr(e, "_PERSIAN_REQUIRED_CHARS", None)
+    e._PERSIAN_REQUIRED_CHARS = required
+    try:
+        return _ORIG["build"](
+            config_path, out_pdf, only_ids=only_ids, run_qa=run_qa
+        )
+    finally:
+        if previous is None:
+            try:
+                delattr(e, "_PERSIAN_REQUIRED_CHARS")
+            except AttributeError:
+                pass
+        else:
+            e._PERSIAN_REQUIRED_CHARS = previous
+
+
 def install():
     global _INSTALLED
     if _INSTALLED:
@@ -595,6 +641,7 @@ def install():
     _ORIG["comparison"] = e.comparison
     _ORIG["header_footer"] = e.header_footer
     _ORIG["chart_label"] = getattr(e, "_chart_label", None)
+    _ORIG["build"] = e.build
 
     e.ENGINE_VERSION = "0.6.2"
     e.register_fonts = register_fonts_v062
@@ -604,3 +651,4 @@ def install():
     e.comparison = comparison_v062
     e.RENDERERS["summary"] = summary_v062
     e.RENDERERS["comparison"] = comparison_v062
+    e.build = build_v062
