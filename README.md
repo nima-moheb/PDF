@@ -117,3 +117,11 @@ python scripts/verify_delivery.py output/report.pdf --config report.json
 The gate checks the emitted file for Nima Report Engine provenance, missing glyphs, leaked bidi/control characters, Persian font compliance, and rendered page-counter digits. This specifically prevents a stale or ad-hoc ReportLab PDF from being renamed/copied and presented as a repo-generated deliverable.
 
 Persian production output must embed Vazirmatn. Test-only fallback output can exist inside the regression suite but is explicitly non-deliverable.
+
+## v0.6.2 offline Persian fonts
+
+Persian PDF generation is now network-independent. The repo includes an OFL-licensed Vazirmatn variable webfont under `reportkit/data/`. At runtime it is converted into validated Regular/Medium/Bold TTF instances in the local report-engine cache.
+
+`python scripts/bootstrap_fonts.py` therefore prepares required Persian fonts without DNS or internet. IBM Plex download remains optional and falls back safely when offline.
+
+The engine validates representative Persian letters and digits before trusting cached Vazirmatn files, so corrupt/subset cache entries are automatically replaced from the bundled asset.
