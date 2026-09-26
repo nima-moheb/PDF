@@ -6,6 +6,10 @@ import re
 import unicodedata
 import json
 from pathlib import Path
+from importlib.resources import files
+
+from fontTools.ttLib import TTFont as FontToolsTTFont
+from fontTools.varLib.instancer import instantiateVariableFont
 
 import fitz
 from reportlab.pdfbase import pdfmetrics
@@ -50,8 +54,70 @@ def _font_file(name: str):
     return None
 
 
+_VAZIR_REQUIRED_CODEPOINTS = tuple(map(ord, "ابتپمینوژگ۰۱۹"))
+
+
+def _font_has_required_persian(path) -> bool:
+    if not path or not Path(path).exists():
+        return False
+    try:
+        font = FontToolsTTFont(str(path), lazy=True)
+        cmap = font.getBestCmap() or {}
+        ok = all(cp in cmap for cp in _VAZIR_REQUIRED_CODEPOINTS)
+        font.close()
+        return ok
+    except Exception:
+        return False
+
+
+def _ensure_bundled_vazirmatn():
+    """Materialize static Vazirmatn TTF instances from the vendored WOFF2 asset.
+
+    This is intentionally network-free. Invalid/subset cache files are overwritten.
+    """
+    out = Path(
+        os.environ.get(
+            "REPORTKIT_FONT_DIR",
+            Path.home() / ".cache" / "nima-report-engine" / "fonts",
+        )
+    ).expanduser()
+    out.mkdir(parents=True, exist_ok=True)
+    targets = {
+        400: out / "Vazirmatn-Regular.ttf",
+        500: out / "Vazirmatn-Medium.ttf",
+        700: out / "Vazirmatn-Bold.ttf",
+    }
+    if all(_font_has_required_persian(p) for p in targets.values()):
+        return targets
+
+    resource = files("reportkit").joinpath("data/Vazirmatn-Variable.woff2")
+    if not resource.is_file():
+        return targets
+
+    source = out / "Vazirmatn-Variable.woff2"
+    source.write_bytes(resource.read_bytes())
+
+    for weight, dst in targets.items():
+        font = FontToolsTTFont(str(source))
+        font.flavor = None
+        if "fvar" in font:
+            font = instantiateVariableFont(font, {"wght": weight}, inplace=False)
+        font.flavor = None
+        font.save(str(dst))
+        font.close()
+
+    bad = [str(p) for p in targets.values() if not _font_has_required_persian(p)]
+    if bad:
+        raise RuntimeError(
+            "FONT_SETUP_FAIL: bundled Vazirmatn materialized without required "
+            "Persian letters/digits: " + ", ".join(bad)
+        )
+    return targets
+
+
 def register_fonts_v05():
     """Use approved/modern sans faces; never silently choose Naskh for Persian."""
+    _ensure_bundled_vazirmatn()
     rt_r, rt_b = e._convert_plex_runtime()
     latin_r = e._first_existing(
         _font_file("IBMPlexSans-Regular.ttf"),
@@ -85,8 +151,11 @@ def register_fonts_v05():
         fa_b,
     )
     vazir_ready = bool(
-        _font_file("Vazirmatn-Regular.ttf")
-        and (_font_file("Vazirmatn-Medium.ttf") or _font_file("Vazirmatn-Bold.ttf"))
+        _font_has_required_persian(_font_file("Vazirmatn-Regular.ttf"))
+        and (
+            _font_has_required_persian(_font_file("Vazirmatn-Medium.ttf"))
+            or _font_has_required_persian(_font_file("Vazirmatn-Bold.ttf"))
+        )
     )
     if (
         getattr(e, "_V05_REQUIRE_PERSIAN", False)
@@ -95,7 +164,8 @@ def register_fonts_v05():
     ):
         raise RuntimeError(
             "FONT_SETUP_FAIL: Persian reports require Vazirmatn. "
-            "Run `python scripts/bootstrap_fonts.py` and rebuild."
+            "The bundled offline Vazirmatn asset could not be materialized. "
+            "Run `python scripts/bootstrap_fonts.py` for diagnostics and rebuild."
         )
 
     missing = [
