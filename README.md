@@ -23,7 +23,7 @@ A deterministic A4 report compiler for finished, human-facing PDFs. The AI suppl
 python -m venv .venv
 . .venv/bin/activate
 pip install -e .
-python scripts/bootstrap_fonts.py  # recommended exact typography
+python scripts/bootstrap_fonts.py  # optional: preferred Vazirmatn / IBM Plex typography
 ```
 
 Font bootstrap defaults to `~/.cache/nima-report-engine/fonts`; override with `REPORTKIT_FONT_DIR`.
@@ -90,7 +90,7 @@ Real Nika CRM production reports exposed failure modes that synthetic samples di
 - balanced final-line wrapping to avoid one-word cover/subtitle widows;
 - real English/Persian regression fixtures in `examples/real_case_regression_*.json`.
 
-For a Persian report, run `python scripts/bootstrap_fonts.py` before the build. Automated tests may set `REPORTKIT_ALLOW_PERSIAN_FALLBACK=1`; finished deliverables must not.
+For Persian output, valid local Vazirmatn is preferred. If it is unavailable, v0.6.2 can use capability-validated local DejaVu Sans without network access. `python scripts/bootstrap_fonts.py` remains optional for preferred typography.
 
 - Executive summaries must be substantive when the source is substantive: synthesize the important findings in supported prose, then reinforce them with metrics. Density is not permission to inflate empty components around weak content.
 
@@ -116,4 +116,15 @@ python scripts/verify_delivery.py output/report.pdf --config report.json
 
 The gate checks the emitted file for Nima Report Engine provenance, missing glyphs, leaked bidi/control characters, Persian font compliance, and rendered page-counter digits. This specifically prevents a stale or ad-hoc ReportLab PDF from being renamed/copied and presented as a repo-generated deliverable.
 
-Persian production output must embed Vazirmatn. Test-only fallback output can exist inside the regression suite but is explicitly non-deliverable.
+Persian production output must embed an approved capability-validated Persian sans. Vazirmatn is preferred; validated DejaVu Sans is an offline production fallback. Noto Arabic/Naskh and incomplete subset fonts remain rejected.
+
+
+## v0.6.2 adaptive content + offline Persian fonts
+
+v0.6.2 removes two brittle assumptions exposed by JaneDel generation:
+
+- Persian generation no longer depends on outbound DNS. The engine prefers valid local Vazirmatn and otherwise uses validated local DejaVu Sans when it has the required Persian letters/digits.
+- Summary and comparison value components adapt to real semantic content. Short metrics keep compact medallions; wider values use responsive capsules and readable wrapping/scaling.
+- Summary labels/notes can wrap rather than failing on font-metric differences.
+
+Normal content such as `+۲۵ میلیون` or `API فروشگاه` must not require report-JSON repair just to fit decorative geometry.

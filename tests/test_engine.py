@@ -16,6 +16,7 @@ from reportkit import build
 from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
 from reportkit.delivery import verify_delivery
 from reportkit.visual_v05 import clean_text
+from reportkit.visual_v062 import _font_has_persian_coverage
 from reportkit.rtl import visual_runs, visual_rtl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -235,7 +236,7 @@ class EngineTests(unittest.TestCase):
 
     def test_v05_strips_pasted_invisible_controls_but_keeps_zwnj(self):
         self.assertEqual(clean_text("خ\ufeffلاصه نقش\u200fها"), "خلاصه نقشها")
-        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")
+        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")\n        self.assertEqual(clean_text("ي ك"), "ی ک")
 
     def test_v05_real_case_regressions_render(self):
         for name, pages in (
@@ -331,13 +332,13 @@ class EngineTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "missing Nima Report Engine"):
                 verify_delivery(bad)
 
-    def test_v061_delivery_gate_rejects_persian_fallback_as_production(self):
+    def test_v062_delivery_gate_accepts_approved_offline_persian_sans(self):
         src = ROOT / "examples" / "real_case_regression_fa.json"
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "fa.pdf"
             build(src, out)
-            with self.assertRaisesRegex(RuntimeError, "does not embed Vazirmatn"):
-                verify_delivery(out, src)
+            result = verify_delivery(out, src)
+            self.assertEqual(result["status"], "PASS")
 
     def test_v061_delivery_gate_accepts_repo_output_in_internal_test_mode(self):
         src = ROOT / "examples" / "real_case_regression_fa.json"
@@ -347,10 +348,97 @@ class EngineTests(unittest.TestCase):
             result = verify_delivery(
                 out,
                 src,
-                expected_engine_version="0.6.1",
+                expected_engine_version="0.6.2",
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
+
+
+    def test_v062_wide_persian_metrics_adapt_instead_of_fit_fail(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        summary = cfg["pages"][1]
+        summary["cards"][0]["value"] = "+۲۵ میلیون"
+        summary["cards"][1]["value"] = "۱۲۰ میلیون"
+        summary["cards"][2]["value"] = "حدود ۳ هفته"
+        summary["cards"][3]["value"] = "+۳۰ میلیون"
+        cfg["pages"] = [cfg["pages"][0], summary]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "wide.json"
+            out = Path(td) / "wide.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            text = "\n".join(page.get_text() for page in fitz.open(out))
+            for value in ("+۲۵ میلیون", "۱۲۰ میلیون", "حدود ۳ هفته", "+۳۰ میلیون"):
+                self.assertIn(value.replace("\u200c", ""), text)
+
+    def test_v062_dejavu_has_required_persian_coverage_when_present(self):
+        p = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+        if p.exists():
+            self.assertTrue(_font_has_persian_coverage(p))
+
+
+    def test_v062_comparison_values_adapt_instead_of_fixed_medallion_failure(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        comparison = next(p for p in cfg["pages"] if p["type"] == "comparison")
+        comparison["items"][0]["value"] = "API فروشگاه"
+        comparison["items"][1]["value"] = "WooCommerce API"
+        comparison["items"][2]["value"] = "دسترسی مدیریتی"
+        cfg["pages"] = [cfg["pages"][0], comparison]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "comparison.json"
+            out = Path(td) / "comparison.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            text = "\n".join(page.get_text() for page in fitz.open(out))
+            self.assertIn("فروشگاه", text)
+            self.assertIn("WooCommerce API", text)
+            self.assertIn("دسترسی", text)
+
+    def test_v062_summary_labels_can_wrap_without_decorative_fit_failure(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        summary = cfg["pages"][1]
+        summary["cards"][0]["label"] = "هزینه ماژول اختیاری تلفن و تماس خودکار"
+        summary["cards"][0]["note"] = "در صورت انتخاب ماژول PBX / IVR"
+        cfg["pages"] = [cfg["pages"][0], summary]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "summary-labels.json"
+            out = Path(td) / "summary-labels.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
+
+
+    def test_v062_chart_labels_wrap_instead_of_fixed_slot_failure(self):
+        cfg = json.loads(EXAMPLE.read_text())
+        chart = next(p for p in cfg["pages"] if p["type"] == "chart_text")
+        chart["chart"]["labels"] = [
+            "هفته اول پروژه",
+            "هفته دوم پروژه",
+            "هفته سوم پروژه",
+            "هفته چهارم پروژه",
+            "هفته پنجم پروژه",
+            "هفته ششم پروژه",
+        ]
+        cfg["pages"] = [cfg["pages"][0], chart]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "chart-labels.json"
+            out = Path(td) / "chart-labels.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
+
+    def test_v062_long_navigation_titles_do_not_block_semantic_page(self):
+        cfg = json.loads((ROOT / "examples" / "real_case_regression_fa.json").read_text())
+        page = cfg["pages"][2]
+        page["title"] = "معماری محصول و تجربه کاربری پلتفرم جان‌دل"
+        cfg["meta"]["title"] = "پیشنهاد طراحی و توسعه پلتفرم جامع خدمات سالمندی جان‌دل"
+        cfg["pages"] = [cfg["pages"][0], page]
+        with tempfile.TemporaryDirectory() as td:
+            inp = Path(td) / "long-nav.json"
+            out = Path(td) / "long-nav.pdf"
+            inp.write_text(json.dumps(cfg, ensure_ascii=False))
+            build(inp, out)
+            self.assertTrue(out.exists())
 
 
 if __name__ == "__main__":
