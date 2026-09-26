@@ -348,7 +348,7 @@ class EngineTests(unittest.TestCase):
             result = verify_delivery(
                 out,
                 src,
-                expected_engine_version="0.6.1",
+                expected_engine_version="0.6.2",
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
