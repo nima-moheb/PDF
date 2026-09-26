@@ -105,3 +105,15 @@ v0.6 closes defects visible in real PDF viewers rather than only in source/QA ex
 - comparison pages use large numbered visual hierarchy and better vertical distribution.
 
 These rules are regression-tested against the Nika Persian fixture and the five-cover Persian showcase.
+
+## v0.6.1 delivery provenance gate
+
+Finished PDFs now have a hard file-level acceptance step. Normal `build()` calls run it automatically, and the standalone command is:
+
+```bash
+python scripts/verify_delivery.py output/report.pdf --config report.json
+```
+
+The gate checks the emitted file for Nima Report Engine provenance, missing glyphs, leaked bidi/control characters, Persian font compliance, and rendered page-counter digits. This specifically prevents a stale or ad-hoc ReportLab PDF from being renamed/copied and presented as a repo-generated deliverable.
+
+Persian production output must embed Vazirmatn. Test-only fallback output can exist inside the regression suite but is explicitly non-deliverable.

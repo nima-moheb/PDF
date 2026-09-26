@@ -14,6 +14,7 @@ from PIL import Image
 
 from reportkit import build
 from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
+from reportkit.delivery import verify_delivery
 from reportkit.visual_v05 import clean_text
 from reportkit.rtl import visual_runs, visual_rtl
 
@@ -30,6 +31,7 @@ class EngineTests(unittest.TestCase):
     def setUpClass(cls):
         import os
         os.environ["REPORTKIT_ALLOW_PERSIAN_FALLBACK"] = "1"
+        os.environ["REPORTKIT_INTERNAL_TEST"] = "1"
 
     def test_public_safety_rejects_internal_language(self):
         with self.assertRaises(ValueError):
@@ -316,6 +318,39 @@ class EngineTests(unittest.TestCase):
             build(src, out)
             extracted = "\n".join(page.get_text() for page in fitz.open(out)[1:]).upper()
             self.assertNotIn("PAGE", extracted)
+
+
+    def test_v061_delivery_gate_rejects_non_engine_pdf(self):
+        from reportlab.pdfgen import canvas
+        with tempfile.TemporaryDirectory() as td:
+            bad = Path(td) / "adhoc.pdf"
+            c = canvas.Canvas(str(bad))
+            c.drawString(72, 720, "Ad hoc PDF")
+            c.showPage()
+            c.save()
+            with self.assertRaisesRegex(RuntimeError, "missing Nima Report Engine"):
+                verify_delivery(bad)
+
+    def test_v061_delivery_gate_rejects_persian_fallback_as_production(self):
+        src = ROOT / "examples" / "real_case_regression_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "fa.pdf"
+            build(src, out)
+            with self.assertRaisesRegex(RuntimeError, "does not embed Vazirmatn"):
+                verify_delivery(out, src)
+
+    def test_v061_delivery_gate_accepts_repo_output_in_internal_test_mode(self):
+        src = ROOT / "examples" / "real_case_regression_fa.json"
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "fa.pdf"
+            build(src, out)
+            result = verify_delivery(
+                out,
+                src,
+                expected_engine_version="0.6.1",
+                allow_test_font_fallback=True,
+            )
+            self.assertEqual(result["status"], "PASS")
 
 
 if __name__ == "__main__":
