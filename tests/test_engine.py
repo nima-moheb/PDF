@@ -14,7 +14,7 @@ from jsonschema import ValidationError, validate
 from pypdf import PdfReader
 from PIL import Image
 
-from reportkit import build
+from reportkit import build, __version__
 from reportkit.engine import SCHEMA, _cover_meta_cells, scrub
 from reportkit.delivery import verify_delivery
 from reportkit.visual_v05 import clean_text
@@ -345,10 +345,13 @@ class EngineTests(unittest.TestCase):
             result = verify_delivery(
                 out,
                 src,
-                expected_engine_version="0.7.0",
+                expected_engine_version=__version__,
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
+
+            with self.assertRaisesRegex(RuntimeError, "engine version mismatch"):
+                verify_delivery(out, src, expected_engine_version="0.0.0")
 
 
     def test_v062_wide_persian_metrics_adapt_instead_of_fit_fail(self):

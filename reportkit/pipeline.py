@@ -20,7 +20,7 @@ from .qa import preflight_and_render
 from .rtl import _fribidi
 from .visual_v05 import _density_check
 
-ENGINE_VERSION = '0.7.0'
+ENGINE_VERSION = '0.7.1'
 _BUILD_LOCK = threading.RLock()  # Legacy visual components temporarily change module globals.
 
 

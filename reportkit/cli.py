@@ -1,16 +1,14 @@
 """Small chat-facing interface: validate, build, inspect, edit, verify, pack."""
 from __future__ import annotations
 import argparse
-import copy
 import json
-import shutil
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
 from jsonschema import ValidationError
 from .contract import load_config, validate_config, source_identity
-from .pipeline import build, bundle_path, runtime_contract
+from .pipeline import build, bundle_path, runtime_contract, output_lock
 from .delivery import verify_delivery
 from .engine import sha
 from .fonts import register_fonts
@@ -20,7 +18,7 @@ def _accepted(output):
     output=Path(output).resolve(); state=bundle_path(output)
     manifest=load_config(state/'manifest.json')
     if manifest['build']['qa_status']!='PASS' or manifest['build']['final_pdf_sha256']!=sha(output):
-        raise ValueError('DELIVERY_FAIL: output differs from its accepted build receipt')
+        raise ValueError('DELIVERY_FAIL: output differs from its accepted build receipt; restore the PDF and its .build folder together from the same editable archive')
     qa=load_config(state/'qa/qa_manifest.json')
     if qa['pdf_sha256']!=sha(output): raise ValueError('DELIVERY_FAIL: rendered QA receipt does not match')
     verify_delivery(output,state/'source.json')
@@ -60,6 +58,27 @@ def result(output):
             'unchanged_pages':info['reused_ids'],'seconds':info['duration_seconds']}
 
 
+def pack_report(output, archive):
+    output=Path(output).resolve(); archive=Path(archive).resolve(); state=bundle_path(output)
+    if archive.suffix.lower()!='.zip' or archive.is_dir():
+        raise ValueError('PACK_FAIL: archive must be a .zip file')
+    if archive==output or archive==state or state in archive.parents:
+        raise ValueError('PACK_FAIL: archive must be outside the editable bundle and differ from the PDF')
+    # Hold the writer's lock from acceptance through archive commit. Otherwise
+    # an edit can replace the source/pages halfway through creating the ZIP.
+    with output_lock(output):
+        _accepted(output)
+        archive.parent.mkdir(parents=True,exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=archive.parent) as tmp:
+            tmpzip=Path(tmp)/'bundle.zip'
+            with zipfile.ZipFile(tmpzip,'w',zipfile.ZIP_DEFLATED) as z:
+                z.write(output,output.name)
+                for f in sorted(state.rglob('*')):
+                    if f.is_file(): z.write(f,state.name+'/'+str(f.relative_to(state)))
+            tmpzip.replace(archive)
+    return {'status':'PASS','archive':str(archive)}
+
+
 def main(argv=None):
     parser=argparse.ArgumentParser(description='Compile and safely revise multilingual reports.')
     sub=parser.add_subparsers(dest='command',required=True)
@@ -93,18 +112,7 @@ def main(argv=None):
             state,_=_accepted(args.output)
             answer=verify_delivery(args.output,args.config or state/'source.json')
         elif args.command=='pack':
-            state,_=_accepted(args.output); output=Path(args.output).resolve(); archive=Path(args.archive).resolve()
-            if archive==output or archive==state or state in archive.parents:
-                raise ValueError('PACK_FAIL: archive must be outside the editable bundle and differ from the PDF')
-            archive.parent.mkdir(parents=True,exist_ok=True)
-            with tempfile.TemporaryDirectory(dir=archive.parent) as tmp:
-                tmpzip=Path(tmp)/'bundle.zip'
-                with zipfile.ZipFile(tmpzip,'w',zipfile.ZIP_DEFLATED) as z:
-                    z.write(output,output.name)
-                    for f in sorted(state.rglob('*')):
-                        if f.is_file(): z.write(f,state.name+'/'+str(f.relative_to(state)))
-                shutil.move(tmpzip,archive)
-            answer={'status':'PASS','archive':str(archive)}
+            answer=pack_report(args.output,args.archive)
         print(json.dumps(answer,ensure_ascii=False,indent=2))
         return 0
     except (ValueError,RuntimeError,OSError,KeyError,ValidationError) as exc:

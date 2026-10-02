@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 import unittest
+import zipfile
 from decimal import Decimal
 from contextlib import redirect_stderr
 from pathlib import Path
@@ -15,7 +16,7 @@ from PIL import Image
 from fontTools.ttLib import TTFont
 from reportkit import build
 from reportkit import engine as e
-from reportkit.cli import edit_page, _accepted, main
+from reportkit.cli import edit_page, _accepted, main, pack_report
 from reportkit.contract import load_config, validate_config
 from reportkit.delivery import verify_delivery
 from reportkit.fonts import FONT_DIR
@@ -230,5 +231,33 @@ class WorkflowTests(unittest.TestCase):
         with fitz.open(self.out) as doc:
             self.assertIn('PAGE',doc[1].get_text())
             self.assertTrue(any('Vazirmatn' in f[3] for f in doc[1].get_fonts()))
+
+    def test_archive_restores_exact_pdf_after_delivery_metadata_change(self):
+        build(self.source,self.out); before=self.snapshot()
+        archive=self.root/'editable.zip'; pack_report(self.out,archive)
+        # A delivery service may append metadata without changing any page.
+        self.out.write_bytes(self.out.read_bytes()+b'\n% delivery metadata\n')
+        with self.assertRaisesRegex(ValueError,'same editable archive'): _accepted(self.out)
+        restored=self.root/'restored'; restored.mkdir()
+        with zipfile.ZipFile(archive) as z: z.extractall(restored)
+        restored_pdf=restored/self.out.name; _accepted(restored_pdf)
+        self.assertEqual(e.sha(restored_pdf),before['pdf'])
+        replacement=copy.deepcopy(self.cfg['pages'][1]); replacement['title']='Restored and revised'
+        p=self.root/'replacement.json'; p.write_text(json.dumps(replacement))
+        edit_page(restored_pdf,'2',p)
+        for name in ('001-cover.pdf','003-pricing.pdf','004-closing.pdf'):
+            self.assertEqual(e.sha(bundle_path(restored_pdf)/'pages'/name),before['pages/'+name])
+
+    def test_packing_locks_report_and_rejects_invalid_destinations(self):
+        build(self.source,self.out); before=self.snapshot(); archive=self.root/'editable.zip'
+        with output_lock(self.out):
+            with self.assertRaisesRegex(RuntimeError,'BUILD_BUSY'): pack_report(self.out,archive)
+        self.assertFalse(archive.exists())
+        for target in (self.out,bundle_path(self.out)/'nested.zip',self.root/'directory.zip'):
+            if target.name=='directory.zip': target.mkdir()
+            with self.assertRaisesRegex(ValueError,'PACK_FAIL'): pack_report(self.out,target)
+        self.assertEqual(before,self.snapshot())
+        pack_report(self.out,archive)
+        with zipfile.ZipFile(archive) as z: self.assertIsNone(z.testzip())
 
 if __name__=='__main__': unittest.main()

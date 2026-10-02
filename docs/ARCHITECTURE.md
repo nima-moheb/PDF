@@ -29,6 +29,8 @@ Builds write a temporary candidate next to the output. The final PDF is replaced
 
 Page replacement starts from accepted `source.json`, requires the same stable ID, validates against the prior source digest to avoid lost updates, and confirms unchanged page hashes. A failed edit leaves both source and PDF unchanged. Report bundles carry images so source identity survives moving the folder.
 
+Archive creation holds the same output lock while checking acceptance and copying the PDF/bundle into a temporary ZIP. It then atomically replaces the ZIP file. Resume from the PDF and bundle inside that archive; file-delivery services may append metadata to a standalone PDF, so its receipt must not be mixed with the original bundle.
+
 ## Delivery claims and limits
 
 The standard CLI `verify` checks build/QA receipts and the final file. The Python file verifier checks source identity when supplied a source. These are integrity and rendering checks, not cryptographic authorship authentication, factual verification, accessibility certification, or a substitute for visual review.
