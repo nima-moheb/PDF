@@ -47,3 +47,11 @@ The chat still chooses relevant content, checks facts and supplies approved pric
 Safe revision in a new chat needs the PDF **and** its editable bundle, available through `pack`. Old 0.6 inputs remain supported, but legacy shared caches require a full rebuild. Recipient, theme, language, page order/count, requirements or engine changes are global and cannot masquerade as a strict one-page edit.
 
 Ordinary failures restore the previous bundle. A crash between bundle/PDF replacement is detected by mismatching receipts; this is not a power-loss-atomic database. The remaining historical visual modules are retained behind a single public pipeline to preserve approved designs; their temporary globals are serialized within a process.
+
+## Handoff follow-up — 0.7.1
+
+A real saved-file round trip appended platform metadata to the standalone PDF while leaving its page content unchanged. The editable ZIP retained the exact accepted PDF and receipts. The instructions now require resuming from the archived pair and explicitly reject changing receipt hashes to accommodate a processed standalone file.
+
+The follow-up also found a pack/edit race: packing previously verified the report before copying files without holding the report lock. Archive creation now holds that lock throughout acceptance, copying and ZIP replacement, and rejects directory/non-ZIP destinations. Two regression tests cover locking and archive restoration followed by a strict page-two edit. All 54 tests pass.
+
+The refreshed Persian sample was saved and downloaded again. Its standalone PDF passed delivery checks and all four rendered pages were pixel-identical to the accepted source. The downloaded editable ZIP was byte-identical; restoring it and editing page two preserved the other three page artifacts exactly. The separately processed PDF is suitable for viewing, while the archived pair is the accepted editing baseline.

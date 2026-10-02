@@ -1,6 +1,6 @@
 # PDF engine working brief
 
-Status: LIVE v2, 2026-10-02. Engine: 0.7.0. Audit baseline: `f27877ee5e6576202faf20cf841907b4dbd0d68a` (0.6.2). Git history and the associated pull request record publication state.
+Status: LIVE v3, 2026-10-02. Engine: 0.7.1. Audit baseline: `f27877ee5e6576202faf20cf841907b4dbd0d68a` (0.6.2). Git history and the associated pull requests record publication state.
 
 ## Goal
 
@@ -36,5 +36,7 @@ All 52 tests pass. Nine example reports (44 pages) pass final gates, and affecte
 ## Continuing work
 
 For a report request, use the user's current conversation as the content brief, preserve approved values, build, inspect rendered pages and actually deliver the file. Keep its editable bundle for later chats. Do not repeat the engine audit during routine generation.
+
+The 0.7.1 follow-up protects archive creation with the report lock and documents restoring the PDF/bundle pair from the editable ZIP after delivery-service metadata changes. All 54 tests pass. A real save/download round trip preserved the sample's page pixels and the ZIP bytes; editing page two of the restored archive preserved all other page artifacts. Resume from the archived PDF, not a separately processed attachment.
 
 For a future engine change, preserve the same rendering boundaries and rerun relevant tests/visual fixtures. Additional languages, complex tax models and new layout patterns need explicit implementation and verification. Facts, relevance and unsupported scripts are not inferred by the compiler. A PDF alone cannot provide a safe semantic page revision.

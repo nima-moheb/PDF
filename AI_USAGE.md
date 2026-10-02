@@ -10,7 +10,7 @@ Use this file and one matching example. Routine report generation does **not** r
 4. Keep content in semantic JSON. Choose page archetypes below and stable descriptive IDs. The engine owns coordinates, typography, colors, margins and fit. Preserve approved amounts, qualifiers, names and claims.
 5. Put non-negotiable page IDs and wording in `requirements`. Use `protected_values` for exact **whole field** values such as a price string or approved phrase. They prevent later edits from silently changing these values. Deliberate user changes to protected content require updating the relevant requirement in a full build.
 6. Run the build command. It validates content, renders, preflights and verifies the final PDF. Inspect the PNGs in the returned `qa` directory. For a local edit, inspect the changed pages; unchanged accepted pages are verified by hashes.
-7. Deliver the PDF through the chat's file-delivery mechanism. Persist the editable `.build` folder (or a packed ZIP) with it so another chat can perform a real page correction. An exported PDF alone does not contain the semantic source. Do not commit private client reports to this public repository.
+7. Deliver the PDF through the chat's file-delivery mechanism. Run `pack` and persist its editable ZIP as the handoff for later chats. The ZIP includes the exact accepted PDF, semantic source, images and receipts. An exported PDF alone does not contain the semantic source. Do not commit private client reports to this public repository.
 
 ## Commands
 
@@ -44,6 +44,17 @@ python -m reportkit edit output/report.pdf --page 2 --replacement replacement-pa
 Page numbers mean PDF viewer numbers, including the cover. A stable ID also works with `--page`. This command changes the saved semantic source only after the new PDF passes every gate. It rejects stale edits, changed shared dependencies, and any unrequested changed page. Untouched page PDFs and their verified PNGs remain byte-identical. There is no manual PDF patching or layout surgery.
 
 For intentional changes to recipient, theme, language, requirements, page count/order, or the engine version, edit the whole source and run `build`. It reports which pages it rebuilt. `build --only page-id` preserves the older automatic-expansion behavior; `--strict-only` makes this restriction a hard boundary.
+
+### Continue in another chat
+
+Extract the saved editable ZIP into a fresh directory and use the **PDF inside that ZIP** with its accompanying `.build` folder. Delivery services may append metadata to the separately attached PDF; its file hash then differs from the accepted receipt even when its pages look unchanged. Never overwrite receipt hashes to accept that difference. Restore the original pair from the archive instead.
+
+```bash
+python -m zipfile -e report-editable.zip restored-report
+python -m reportkit verify restored-report/report.pdf
+```
+
+Use the actual PDF filename from the archive. Then inspect/edit as above. If the engine or runtime changed, strict edits require a full verified rebuild from the archived source before establishing a new editable baseline; do not silently bypass that boundary.
 
 ## Select content by purpose
 

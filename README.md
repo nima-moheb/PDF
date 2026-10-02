@@ -59,6 +59,8 @@ python -m reportkit pack output/report.pdf output/report-editable.zip
 
 Keep the editable ZIP for another chat. A PDF alone is not enough for a safe semantic revision. **Do not commit private client reports into this public repository.**
 
+When continuing, extract the archive into a fresh directory and use its included PDF with its `.build` folder. A separately attached PDF may have delivery-service metadata appended, making it differ from the accepted file receipt. Restore the archived pair rather than changing receipt hashes. Archive creation holds the report lock, so it cannot overlap a page edit and capture mismatched files.
+
 ## Design and compatibility
 
 All five approved covers remain: `signal-orbit`, `glass-panel`, `aurora-strata`, `constellation`, `editorial-split`. The twelve semantic archetypes include summary, text, cards, charts, comparison, table, pricing, evidence, timeline, sources and closing. No per-report coordinates or arbitrary styling overrides.
