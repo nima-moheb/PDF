@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "title": "A clearer reporting workflow",
+    "theme": "blue",
+    "author": "Nima Moheb",
+    "recipient": "Demonstration client",
+    "language": "en"
+  },
+  "requirements": {
+    "required_page_ids": [
+      "summary",
+      "pricing"
+    ],
+    "protected_values": [
+      {
+        "page_id": "pricing",
+        "value": "1250.00"
+      },
+      {
+        "page_id": "pricing",
+        "value": "750.00"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "title": "A clearer reporting workflow",
+      "subtitle": "A reusable report with a concise summary, explicit pricing and safe page-by-page revisions.",
+      "variant": "glass-panel"
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "title": "What you need to know",
+      "intro": "This example shows how a short report can support a decision without burying the important details. The summary explains the scope, the pricing page keeps the currency explicit, and the closing page gives the reader a clear next step. The figures below describe this demonstration only.",
+      "cards": [
+        {
+          "label": "Languages",
+          "value": "3",
+          "note": "English, Persian and Spanish"
+        },
+        {
+          "label": "Report pages",
+          "value": "4",
+          "note": "One purpose for each page"
+        },
+        {
+          "label": "Price currency",
+          "value": "EUR",
+          "note": "No implicit currency conversion"
+        },
+        {
+          "label": "Editable source",
+          "value": "1",
+          "note": "A reusable report bundle"
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "type": "pricing",
+      "title": "Scope and price",
+      "intro": "Illustrative service pricing for this demonstration. Each line has an explicit quantity and unit price.",
+      "currency": "EUR",
+      "items": [
+        {
+          "description": "Planning and report structure",
+          "quantity": "1",
+          "unit_price": "1250.00"
+        },
+        {
+          "description": "Design and preparation",
+          "quantity": "1",
+          "unit_price": "750.00"
+        }
+      ],
+      "expected_total": "2000.00",
+      "note": "These are demonstration figures, not a commercial offer. No tax or external fee has been added. Any real quote must use the agreed amounts and terms."
+    },
+    {
+      "id": "closing",
+      "type": "closing",
+      "title": "A clear next step",
+      "text": "Review the scope and the currency before approving a real report. If one page needs a correction, identify its page number and describe the change. The remaining pages keep their accepted content and layout."
+    }
+  ]
+}

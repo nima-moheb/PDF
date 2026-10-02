@@ -445,7 +445,7 @@ def tech_grid(c, th, dark=False):
 
 def _cover_rtl(meta, p):
     title = p.get("title", meta["title"])
-    return bool(p.get("direction") == "rtl" or (p.get("direction") != "ltr" and is_fa(title)))
+    return bool(p.get("direction") == "rtl" or (p.get("direction") != "ltr" and (meta.get("language") == "fa" or (not meta.get("language") and is_fa(title)))))
 
 
 AUTHOR_EN = "Nima Moheb"
@@ -465,6 +465,8 @@ def _cover_meta_cells(meta, rtl):
     author = _cover_author(meta, rtl)
     if rtl:
         return [("برای", meta.get("recipient", "")), ("تاریخ", meta.get("date", "")), ("تهیه شده توسط", author)]
+    if meta.get("language") == "es":
+        return [("Preparado por", author), ("Fecha", meta.get("date", "")), ("Para", meta.get("recipient", ""))]
     return [("Prepared by", author), ("Date", meta.get("date", "")), ("For", meta.get("recipient", ""))]
 
 
@@ -484,8 +486,8 @@ def _cover_title(c, meta, p, th, tx, top_y, title_w, rtl, colorv="#FFFFFF", size
 
 def _cover_meta_row(c, meta, th, x, y, w, rtl, dark=True):
     gap = 3.2 * MM
-    cw = (w - 2 * gap) / 3
-    cells = _cover_meta_cells(meta, rtl)
+    cells = [(label, value) for label, value in _cover_meta_cells(meta, rtl) if str(value).strip()]
+    cw = (w - gap * (len(cells) - 1)) / len(cells)
     for i, (lab, val) in enumerate(cells):
         xx = x + i * (cw + gap)
         fill = th["deep"] if dark else "#FFFFFF"
@@ -522,14 +524,14 @@ def _cover_signal_orbit(c, meta, p, th, rtl):
     c.restoreState()
     title_w = 112 * MM
     tx = W - 18 * MM - title_w if rtl else 18 * MM
-    eyebrow = p.get("eyebrow", "گزارش" if rtl else "PERFORMANCE REPORT")
+    eyebrow = p.get("eyebrow", "گزارش" if rtl else chrome("Report"))
     draw_text(c, eyebrow, tx, H - 45 * MM, title_w, size=8.7, bold=True, rtl=is_fa(eyebrow), colorv="#D7E7FF", max_lines=1)
     y = _cover_title(c, meta, p, th, tx, H - 70 * MM, title_w, rtl, size=32.5)
     subtitle = p.get("subtitle", meta.get("subtitle", ""))
     if subtitle:
         draw_text(c, subtitle, tx, y - 7 * MM, title_w, size=11.3, rtl=rtl if is_fa(subtitle) else None, colorv="#EAF2FF", max_lines=5)
     _cover_meta_row(c, meta, th, tx, H - 174 * MM, title_w, rtl, dark=True)
-    draw_single_line(c, "NIMA REPORT ENGINE", 18 * MM, 13 * MM, 60 * MM, size=6.4, min_size=6.4, font="LatinB", rtl=False, colorv="#B9D8FF")
+    draw_chrome(c, "NIMA REPORT ENGINE", 18 * MM, 13 * MM, 60 * MM, size=6.4, min_size=6.4, font="LatinB", rtl=False, colorv="#B9D8FF")
 
 
 def _cover_glass_panel(c, meta, p, th, rtl):
@@ -552,7 +554,7 @@ def _cover_glass_panel(c, meta, p, th, rtl):
     tx = W - 20 * MM - title_w if rtl else 20 * MM
     if rtl:
         tx = panel_w + 17 * MM
-    eyebrow = p.get("eyebrow", "گزارش" if rtl else "EXECUTIVE REPORT")
+    eyebrow = p.get("eyebrow", "گزارش" if rtl else chrome("Report"))
     draw_text(c, eyebrow, tx, H - 45 * MM, title_w, size=8.6, bold=True, rtl=is_fa(eyebrow), colorv=th["accent"], max_lines=1)
     y = _cover_title(c, meta, p, th, tx, H - 70 * MM, title_w, rtl, colorv=th["deep"], size=31.0)
     subtitle = p.get("subtitle", meta.get("subtitle", ""))
@@ -563,7 +565,7 @@ def _cover_glass_panel(c, meta, p, th, rtl):
     plaque_x = 14 * MM if rtl else W - panel_w + 10 * MM
     plaque_w = panel_w - 28 * MM if rtl else panel_w - 20 * MM
     round_rect(c, plaque_x, 22 * MM, plaque_w, 43 * MM, 12, fill="#FFFFFF", stroke=th["accent2"], sw=0.5, alpha=0.13)
-    draw_single_line(c, "STRUCTURED / FINAL", plaque_x + 4 * MM, 42 * MM, plaque_w - 8 * MM, size=6.5, min_size=5.7, font="LatinB", rtl=False, colorv="#FFFFFF", align="center")
+    draw_chrome(c, "STRUCTURED / FINAL", plaque_x + 4 * MM, 42 * MM, plaque_w - 8 * MM, size=6.5, min_size=5.7, font="LatinB", rtl=False, colorv="#FFFFFF", align="center")
 
 
 def _cover_aurora_strata(c, meta, p, th, rtl):
@@ -586,7 +588,7 @@ def _cover_aurora_strata(c, meta, p, th, rtl):
     tx = W - 18 * MM - title_w if rtl else 18 * MM
     # translucent title panel
     round_rect(c, tx - 5 * MM, H - 160 * MM, title_w + 10 * MM, 116 * MM, 18, fill="#071B3A", stroke=th["accent2"], sw=0.5, alpha=0.56)
-    eyebrow = p.get("eyebrow", "گزارش" if rtl else "DIGITAL REPORT")
+    eyebrow = p.get("eyebrow", "گزارش" if rtl else chrome("Report"))
     draw_text(c, eyebrow, tx, H - 62 * MM, title_w, size=8.7, bold=True, rtl=is_fa(eyebrow), colorv="#CFE8FF", max_lines=1)
     y = _cover_title(c, meta, p, th, tx, H - 86 * MM, title_w, rtl, size=31.5)
     subtitle = p.get("subtitle", meta.get("subtitle", ""))
@@ -620,7 +622,7 @@ def _cover_constellation(c, meta, p, th, rtl):
     c.restoreState()
     title_w = 120 * MM
     tx = W - 18 * MM - title_w if rtl else 18 * MM
-    eyebrow = p.get("eyebrow", "گزارش" if rtl else "ANALYSIS / REPORT")
+    eyebrow = p.get("eyebrow", "گزارش" if rtl else chrome("Report"))
     draw_text(c, eyebrow, tx, H - 47 * MM, title_w, size=8.5, bold=True, rtl=is_fa(eyebrow), colorv=th["accent2"], max_lines=1)
     y = _cover_title(c, meta, p, th, tx, H - 175 * MM, title_w, rtl, size=31.5)
     subtitle = p.get("subtitle", meta.get("subtitle", ""))
@@ -645,7 +647,7 @@ def _cover_editorial_split(c, meta, p, th, rtl):
     pth.close(); c.drawPath(pth, fill=1, stroke=0)
     title_w = 115 * MM
     tx = split_w + 18 * MM if rtl else 18 * MM
-    eyebrow = p.get("eyebrow", "گزارش" if rtl else "CLIENT REPORT")
+    eyebrow = p.get("eyebrow", "گزارش" if rtl else chrome("Report"))
     draw_text(c, eyebrow, tx, H - 49 * MM, title_w, size=8.8, bold=True, rtl=is_fa(eyebrow), colorv=th["accent"], max_lines=1)
     y = _cover_title(c, meta, p, th, tx, H - 77 * MM, title_w, rtl, colorv=th["deep"], size=32.0)
     subtitle = p.get("subtitle", meta.get("subtitle", ""))
@@ -654,8 +656,8 @@ def _cover_editorial_split(c, meta, p, th, rtl):
     _cover_meta_row(c, meta, th, tx, H - 190 * MM, title_w, rtl, dark=False)
     # Decorative typography on the color field; no fake KPI claims.
     field_x = 13 * MM if rtl else W - split_w + 15 * MM
-    draw_single_line(c, "REPORT", field_x, 55 * MM, split_w - 28 * MM, size=17, min_size=12, font="LatinB", rtl=False, colorv="#FFFFFF", align="center")
-    draw_single_line(c, "DATA / INSIGHT / IMPACT", field_x, 44 * MM, split_w - 28 * MM, size=6.4, min_size=5.4, font="LatinB", rtl=False, colorv=th["accent2"], align="center")
+    draw_chrome(c, "REPORT", field_x, 55 * MM, split_w - 28 * MM, size=17, min_size=12, font="LatinB", rtl=False, colorv="#FFFFFF", align="center")
+    draw_chrome(c, "DATA / INSIGHT / IMPACT", field_x, 44 * MM, split_w - 28 * MM, size=6.4, min_size=5.4, font="LatinB", rtl=False, colorv=th["accent2"], align="center")
 
 
 COVER_VARIANTS = {
@@ -689,7 +691,7 @@ def page_title(c, title, eyebrow, th, y=H - 38 * MM):
 def summary(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Overview"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Overview")), th)
     y = draw_text(c, p["intro"], SAFE_X, y, W - 2 * SAFE_X, size=10.8, max_lines=5)
     y -= 8 * MM
     cards = p["cards"]
@@ -712,7 +714,7 @@ def summary(c, meta, p, th, page):
 def text_page(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Report"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Report")), th)
     groups = []
     current = {"title": "", "content": []}
     for block in p["blocks"]:
@@ -765,7 +767,7 @@ def text_page(c, meta, p, th, page):
 def cards_page(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Highlights"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Highlights")), th)
     cards = p["cards"]
     gap = 5 * MM
     w = (W - 2 * SAFE_X - gap) / 2
@@ -785,7 +787,7 @@ def _chart_label(c, label, center, y, slot_width):
 def chart_text(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Data"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Data")), th)
     chart = p["chart"]
     data = [float(v) for v in chart["data"]]
     labels = chart["labels"]
@@ -795,12 +797,15 @@ def chart_text(c, meta, p, th, page):
     box_top = y - 2 * MM
     box_y = box_top - box_h
     shadow_card(c, box_x, box_y, box_w, box_h, 15, accent=th["accent"])
-    draw_single_line(c, chart.get("title", "TREND").upper(), box_x + 8 * MM, box_y + box_h - 12 * MM, box_w - 16 * MM, size=8, min_size=7, font="LatinB", rtl=False, colorv="#536174")
+    draw_single_line(c, chart.get("title", chrome("TREND")), box_x + 8 * MM, box_y + box_h - 12 * MM, box_w - 16 * MM, size=8, min_size=7, bold=True, colorv="#536174")
 
     maxv = max(data); minv = min(data)
     if maxv == minv: maxv = minv + 1
     pad = (maxv - minv) * 0.16
     lo = minv - pad; hi = maxv + pad
+    if chart["type"] == "bar":
+        lo = min(0, minv) * 1.16; hi = max(0, max(data)) * 1.16
+        if lo == hi: hi = 1
     left = box_x + 16 * MM
     bottom = box_y + 21 * MM
     gw = box_w - 30 * MM
@@ -809,17 +814,25 @@ def chart_text(c, meta, p, th, page):
     for i in range(4):
         ratio = i / 3; yy = bottom + ratio * gh; val = lo + ratio * (hi - lo)
         c.setStrokeColor(color("#D9E2EE")); c.setLineWidth(0.35); c.line(left, yy, left + gw, yy)
-        c.drawRightString(left - 3 * MM, yy - 2, f"{val:.0f}")
+        # Preserve fractional scales and avoid a floating-point "-0" tick.
+        tick = 0 if abs(val) < abs(hi - lo) * 1e-12 else val
+        c.drawRightString(left - 3 * MM, yy - 2, f"{tick:.3g}")
 
     typ = chart["type"]
     if typ == "bar":
+        baseline_y = bottom + gh * (0 - lo) / (hi - lo)
+        c.setStrokeColor(color("#8A99AB")); c.setLineWidth(0.7)
+        c.line(left, baseline_y, left + gw, baseline_y)
         slot = gw / len(data); bw = min(13 * MM, slot * 0.56)
         for i, v in enumerate(data):
             x = left + i * slot + (slot - bw) / 2
-            h = max(1.4 * MM, gh * (v - lo) / (hi - lo))
-            c.setFillColor(color("#0A1930", 0.08)); c.roundRect(x + 1.2, bottom - 1.2, bw, h, bw * 0.22, fill=1, stroke=0)
-            c.setFillColor(color(th["accent"])); c.roundRect(x, bottom, bw, h, bw * 0.22, fill=1, stroke=0)
-            draw_single_line(c, f"{v:g}", x - slot * 0.2, bottom + h + 3.5, bw + slot * 0.4, size=7.3, min_size=6.3, font="LatinB", rtl=False, colorv=th["deep"], align="center")
+            zero_y = bottom + gh * (0 - lo) / (hi - lo)
+            value_y = bottom + gh * (v - lo) / (hi - lo)
+            bar_y = min(zero_y, value_y)
+            h = abs(value_y - zero_y)
+            c.setFillColor(color("#0A1930", 0.08)); c.roundRect(x + 1.2, bar_y - 1.2, bw, h, min(bw * 0.22, h / 2), fill=1, stroke=0)
+            c.setFillColor(color(th["accent"])); c.roundRect(x, bar_y, bw, h, min(bw * 0.22, h / 2), fill=1, stroke=0)
+            draw_single_line(c, f"{v:g}", x - slot * 0.2, value_y + 3.5 if v >= 0 else value_y - 9, bw + slot * 0.4, size=7.3, min_size=6.3, font="LatinB", rtl=False, colorv=th["deep"], align="center")
             _chart_label(c, labels[i], x + bw / 2, bottom - 10, slot * 0.9)
     else:
         pts = []; slot = gw / max(len(data) - 1, 1)
@@ -838,13 +851,13 @@ def chart_text(c, meta, p, th, page):
     round_rect(c, SAFE_X, ay, W - 2 * SAFE_X, ah, 12, fill=th["soft"], stroke=th["accent"], sw=0.5)
     draw_text(c, p["analysis"], SAFE_X + 7 * MM, ay + ah - 10 * MM, W - 2 * SAFE_X - 14 * MM, size=9.4, max_lines=6)
     if p.get("source"):
-        draw_text(c, "Source: " + p["source"], SAFE_X, ay - 8 * MM, W - 2 * SAFE_X, size=7, colorv="#7A8798", max_lines=1)
+        draw_text(c, chrome("Source: ") + p["source"], SAFE_X, ay - 8 * MM, W - 2 * SAFE_X, size=7, colorv="#7A8798", max_lines=1)
 
 
 def comparison(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Comparison"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Comparison")), th)
     items = p["items"]
     gap = 5 * MM
     w = (W - 2 * SAFE_X - gap * (len(items) - 1)) / len(items)
@@ -883,8 +896,10 @@ def _table_cell_lines(value, width, header=False):
 def table_page(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Table"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Table")), th)
     cols = p["columns"]; rows = p["rows"]
+    if meta.get("language") == "fa":
+        cols = list(reversed(cols)); rows = [list(reversed(row)) for row in rows]
     x = SAFE_X; total = W - 2 * SAFE_X
     widths = [total / len(cols)] * len(cols); cell_pad = 4 * MM
     header_lines = [_table_cell_lines(col, widths[j] - 2 * cell_pad, header=True) for j, col in enumerate(cols)]
@@ -894,13 +909,13 @@ def table_page(c, meta, p, th, page):
         cells = [_table_cell_lines(val, widths[j] - 2 * cell_pad, header=False) for j, val in enumerate(row)]
         rh = max(14 * MM, max(len(v[0]) for v in cells) * 9.8 + 6 * MM)
         row_specs.append((cells, rh))
-    h = hh + sum(rh for _, rh in row_specs) + 10 * MM
+    h = hh + sum(rh for _, rh in row_specs) + 16 * MM
     if h > y - 28 * MM:
         raise ValueError(f"FIT_FAIL: table needs {h/MM:.1f}mm, page has {(y-28*MM)/MM:.1f}mm")
     yy = y - h
     # Mature table shell: no decorative full-width blue rail.
     round_rect(c, x, yy, total, h, 15, fill="#FFFFFF", stroke="#D8E2EF", sw=0.55)
-    draw_single_line(c, "DATA TABLE", x + 6 * MM, yy + h - 8 * MM, 45 * MM, size=6.7, min_size=6.2, font="LatinB", rtl=False, colorv=th["accent"])
+    draw_chrome(c, "DATA TABLE", x + 6 * MM, yy + h - 8 * MM, 45 * MM, size=6.7, min_size=6.2, font="LatinB", rtl=False, colorv=th["accent"])
     table_top = yy + h - 12 * MM
     c.setFillColor(color(th["soft"], 0.88)); c.roundRect(x + 3 * MM, table_top - hh, total - 6 * MM, hh, 9, fill=1, stroke=0)
     xx = x
@@ -941,7 +956,7 @@ def _resolve_asset(meta, value):
 def image_text(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Evidence"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Evidence")), th)
     x = SAFE_X
     iw = W - 2 * SAFE_X
     ih = 132 * MM
@@ -957,7 +972,7 @@ def image_text(c, meta, p, th, page):
 def timeline(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Timeline"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Timeline")), th)
     items = p["items"]
     xline = SAFE_X + 14 * MM
     c.setStrokeColor(color(th["accent"], 0.30)); c.setLineWidth(2); c.line(xline, 36 * MM, xline, y - 5 * MM)
@@ -976,7 +991,7 @@ def timeline(c, meta, p, th, page):
 def sources(c, meta, p, th, page):
     header_footer(c, meta, page, p["title"], th)
     tech_grid(c, th)
-    y = page_title(c, p["title"], p.get("eyebrow", "Sources"), th)
+    y = page_title(c, p["title"], p.get("eyebrow", chrome("Sources")), th)
     items = p["items"]
     gap = 5 * MM
     cols = 2 if len(items) <= 8 else 1
@@ -1144,8 +1159,11 @@ def _read_previous_manifest(path):
 def _artifact_matches(entry, pages_dir):
     if not entry:
         return False
-    path = pages_dir / entry.get("file", "")
-    return path.exists() and entry.get("sha256") == sha(path)
+    filename = entry.get("file", "")
+    if not filename or Path(filename).name != filename:
+        return False
+    path = pages_dir / filename
+    return path.is_file() and entry.get("sha256") == sha(path)
 
 
 def build(config_path, out_pdf, only_ids=None, run_qa=True):

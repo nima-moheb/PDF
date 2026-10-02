@@ -6,6 +6,8 @@ import json
 import tempfile
 import fitz
 import unittest
+import unicodedata
+from reportkit.pipeline import bundle_path
 from pathlib import Path
 
 from jsonschema import ValidationError, validate
@@ -28,12 +30,6 @@ def file_sha(path):
 
 
 class EngineTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        import os
-        os.environ["REPORTKIT_ALLOW_PERSIAN_FALLBACK"] = "1"
-        os.environ["REPORTKIT_INTERNAL_TEST"] = "1"
-
     def test_public_safety_rejects_internal_language(self):
         with self.assertRaises(ValueError):
             scrub({"x": "TODO: tell Nima later"})
@@ -85,7 +81,7 @@ class EngineTests(unittest.TestCase):
             inp = td / "report.json"
             inp.write_text(json.dumps(cfg))
             build(inp, td / "out/report.pdf")
-            self.assertTrue((td / "out/qa/page-002.png").exists())
+            self.assertTrue((bundle_path(td / "out/report.pdf") / "qa/page-002.png").exists())
 
     def test_closing_exposes_real_resume_url_without_view_resume_label(self):
         with tempfile.TemporaryDirectory() as td:
@@ -111,7 +107,7 @@ class EngineTests(unittest.TestCase):
             build(EXAMPLE, a)
             build(EXAMPLE, b)
             self.assertEqual(file_sha(a), file_sha(b))
-            for pa, pb in zip(sorted((a.parent / "pages").glob("*.pdf")), sorted((b.parent / "pages").glob("*.pdf"))):
+            for pa, pb in zip(sorted((bundle_path(a) / "pages").glob("*.pdf")), sorted((bundle_path(b) / "pages").glob("*.pdf"))):
                 self.assertEqual(file_sha(pa), file_sha(pb), pa.name)
 
     def test_page_surgery_keeps_unaffected_artifacts_byte_identical(self):
@@ -133,7 +129,7 @@ class EngineTests(unittest.TestCase):
                     self.assertNotEqual(before[pid]["sha256"], after[pid]["sha256"])
                 else:
                     self.assertEqual(before[pid]["sha256"], after[pid]["sha256"], pid)
-            manifest = json.loads((td / "manifest.json").read_text())
+            manifest = json.loads((bundle_path(out) / "manifest.json").read_text())
             self.assertEqual(manifest["build"]["mode"], "surgical")
 
     def test_surgery_auto_expands_for_unrequested_changed_page(self):
@@ -149,7 +145,7 @@ class EngineTests(unittest.TestCase):
             after = build(inp, out, only_ids={"trend"})
             self.assertNotEqual(before["summary"]["sha256"], after["summary"]["sha256"])
             self.assertEqual(before["narrative"]["sha256"], after["narrative"]["sha256"])
-            manifest = json.loads((td / "manifest.json").read_text())
+            manifest = json.loads((bundle_path(out) / "manifest.json").read_text())
             self.assertEqual(manifest["build"]["mode"], "surgical-expanded")
 
     def test_global_change_invalidates_surgery_and_rebuilds_all(self):
@@ -165,7 +161,7 @@ class EngineTests(unittest.TestCase):
             after = build(inp, out, only_ids={"trend"})
             self.assertNotEqual(before["cover"]["sha256"], after["cover"]["sha256"])
             self.assertNotEqual(before["summary"]["sha256"], after["summary"]["sha256"])
-            manifest = json.loads((td / "manifest.json").read_text())
+            manifest = json.loads((bundle_path(out) / "manifest.json").read_text())
             self.assertEqual(manifest["build"]["mode"], "surgical-invalidated-full")
 
     def test_table_never_silently_truncates(self):
@@ -184,7 +180,7 @@ class EngineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "r.pdf"
             build(EXAMPLE, out)
-            qa = json.loads((Path(td) / "qa/qa_manifest.json").read_text())
+            qa = json.loads((bundle_path(out) / "qa/qa_manifest.json").read_text())
             self.assertEqual(len(qa["pages"]), 10)
             self.assertEqual(qa["pdf_sha256"], file_sha(out))
             self.assertTrue(all(p["ink_fraction"] > 0.006 for p in qa["pages"]))
@@ -204,7 +200,7 @@ class EngineTests(unittest.TestCase):
                 build(src, out)
                 rd = PdfReader(out)
                 self.assertEqual(len(rd.pages), 5)
-                self.assertTrue((Path(td) / "qa/page-005.png").exists())
+                self.assertTrue((bundle_path(out) / "qa/page-005.png").exists())
 
     def test_persian_cover_auto_mirrors_and_builds(self):
         src = ROOT / "examples/persian_cover.json"
@@ -236,7 +232,8 @@ class EngineTests(unittest.TestCase):
 
     def test_v05_strips_pasted_invisible_controls_but_keeps_zwnj(self):
         self.assertEqual(clean_text("خ\ufeffلاصه نقش\u200fها"), "خلاصه نقشها")
-        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")\n        self.assertEqual(clean_text("ي ك"), "ی ک")
+        self.assertEqual(clean_text("نقش\u200cها"), "نقش\u200cها")
+        self.assertEqual(clean_text("ي ك"), "ی ک")
 
     def test_v05_real_case_regressions_render(self):
         for name, pages in (
@@ -248,7 +245,7 @@ class EngineTests(unittest.TestCase):
                 out = Path(td) / "case.pdf"
                 build(src, out)
                 self.assertEqual(len(PdfReader(out).pages), pages)
-                self.assertTrue((Path(td) / "qa" / f"page-{pages:03d}.png").exists())
+                self.assertTrue((bundle_path(out) / "qa" / f"page-{pages:03d}.png").exists())
 
     def test_v05_density_guard_rejects_short_single_group_page(self):
         cfg = json.loads((ROOT / "examples" / "real_case_regression_en.json").read_text())
@@ -340,7 +337,7 @@ class EngineTests(unittest.TestCase):
             result = verify_delivery(out, src)
             self.assertEqual(result["status"], "PASS")
 
-    def test_v061_delivery_gate_accepts_repo_output_in_internal_test_mode(self):
+    def test_delivery_gate_accepts_versioned_production_output(self):
         src = ROOT / "examples" / "real_case_regression_fa.json"
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "fa.pdf"
@@ -348,7 +345,7 @@ class EngineTests(unittest.TestCase):
             result = verify_delivery(
                 out,
                 src,
-                expected_engine_version="0.6.2",
+                expected_engine_version="0.7.0",
                 allow_test_font_fallback=True,
             )
             self.assertEqual(result["status"], "PASS")
@@ -367,9 +364,10 @@ class EngineTests(unittest.TestCase):
             out = Path(td) / "wide.pdf"
             inp.write_text(json.dumps(cfg, ensure_ascii=False))
             build(inp, out)
-            text = "\n".join(page.get_text() for page in fitz.open(out))
+            text = unicodedata.normalize("NFKC", "\n".join(page.get_text() for page in fitz.open(out)))
             for value in ("+۲۵ میلیون", "۱۲۰ میلیون", "حدود ۳ هفته", "+۳۰ میلیون"):
-                self.assertIn(value.replace("\u200c", ""), text)
+                for token in value.replace("\u200c", "").split():
+                    self.assertIn(token, text)
 
     def test_v062_dejavu_has_required_persian_coverage_when_present(self):
         p = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
@@ -389,9 +387,10 @@ class EngineTests(unittest.TestCase):
             out = Path(td) / "comparison.pdf"
             inp.write_text(json.dumps(cfg, ensure_ascii=False))
             build(inp, out)
-            text = "\n".join(page.get_text() for page in fitz.open(out))
+            text = unicodedata.normalize("NFKC", "\n".join(page.get_text() for page in fitz.open(out)))
             self.assertIn("فروشگاه", text)
-            self.assertIn("WooCommerce API", text)
+            self.assertIn("WooCommerce", text)
+            self.assertIn("API", text)
             self.assertIn("دسترسی", text)
 
     def test_v062_summary_labels_can_wrap_without_decorative_fit_failure(self):

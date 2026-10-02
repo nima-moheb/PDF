@@ -270,8 +270,8 @@ def _metric_value_v062(c, value, cx, cy, max_width, max_height, th, rtl):
 def summary_v062(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Overview"), th)
-    rtl_page = e.is_fa(p["title"])
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Overview")), th)
+    rtl_page = meta.get("language") == "fa"
 
     intro_h = 42 * e.MM
     e.round_rect(
@@ -300,7 +300,7 @@ def summary_v062(c, meta, p, th, page):
     w = (e.W - 2*e.SAFE_X - gap * (cols - 1)) / cols
 
     for i, card in enumerate(cards):
-        col = i % cols
+        col = (cols - 1 - i % cols) if rtl_page else i % cols
         row = i // cols
         x = e.SAFE_X + col * (w + gap)
         yy = top - row * (h + gap) - h
@@ -526,9 +526,9 @@ def _draw_comparison_value(c, value, x, y, width, height, th):
 def comparison_v062(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Comparison"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Comparison")), th)
     items = p["items"]
-    rtl_page = e.is_fa(p["title"])
+    rtl_page = meta.get("language") == "fa"
     gap = 5 * e.MM
     bottom = 31 * e.MM
     w = (e.W - 2*e.SAFE_X - gap*(len(items)-1)) / len(items)

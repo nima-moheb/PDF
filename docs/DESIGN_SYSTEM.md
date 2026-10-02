@@ -16,9 +16,9 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 
 ## Typography and bidi
 
-- Latin: IBM Plex Sans regular/bold when bootstrapped.
-- Persian: Vazirmatn regular/medium/bold when bootstrapped.
-- Runtime survival may use suitable system fallbacks.
+- Latin: IBM Plex Sans regular/bold bundled with the package.
+- Persian: Vazirmatn regular/medium/bold bundled with the package.
+- Runtime output uses the packaged fonts. Unsupported glyphs fail; no silent system-font fallback.
 - FriBidi is used when available for native bidirectional ordering and Arabic shaping. Complete LTR tokens are protected through the bidi pass so URLs, percentages, emails, versions, and multi-word English phrases stay intact.
 - Normal body target remains ~10.5-11 pt; tables ~8.2+ pt; source/caption text ~7+ pt. Content that cannot fit at the component's permitted size fails instead of being microscopically shrunk or sliced.
 
@@ -47,7 +47,7 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Summary metrics are visually dominant and centered. Introductory narrative is treated as a designed panel, not loose text above oversized empty cards.
 - English explanatory prose can use full-width justification. Persian remains right-aligned rather than using crude synthetic justification.
 - RTL mirrors navigation chrome, title markers, footer identity, page chips, timelines, and direction-sensitive card details.
-- Persian typography prefers Vazirmatn. When it is unavailable offline, capability-validated DejaVu Sans is the approved production fallback; Naskh-style and incomplete subset fonts are rejected.
+- Persian typography uses bundled Vazirmatn offline. Naskh-style, subset and system-font fallbacks are rejected.
 - U+FEFF/BOM, LRM/RLM, ALM, soft hyphen, and stray bidi-isolate controls are removed before layout. Persian ZWNJ is retained.
 - Wrap balancing prevents avoidable one-word final lines in prominent cover/subtitle text.
 
@@ -68,5 +68,14 @@ One variable human-facing report system. The AI chooses semantic page archetypes
 - Compact numeric metrics may use circular medallions.
 - Wider metric phrases automatically use a responsive horizontal capsule.
 - Comparison/access values use the available card width and can wrap to two centered lines at a readable size floor.
-- Summary labels/notes may wrap. Font-metric variation between Vazirmatn and DejaVu Sans must not turn ordinary Persian labels into build failures.
+- Summary labels/notes may wrap. Font-metric variation across valid Vazirmatn revisions must not turn ordinary Persian labels into build failures.
 - Decorative fixed widths must never cause a `FIT_FAIL` for ordinary content. Only genuinely impossible page composition may fail.
+
+## Current 0.7 composition
+
+- Omit unknown cover metadata rather than drawing an empty labeled cell.
+- Mirror table/card reading order for Persian; preserve intentional English terms.
+- Prices use a reusable table and dominant total band, explicit currency and exact decimal arithmetic.
+- Positive bar charts start at zero; signed bars extend to the correct side of the zero baseline.
+- Closing pages carry a localized author, working resume link and exact page counter.
+- English, Persian and Spanish chrome are supported. The chat writes the requested language's content.

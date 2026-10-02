@@ -5,8 +5,12 @@ output/
 pages/
 qa/
 manifest.json
+!reportkit/data/fonts/manifest.json
 assets/fonts/
 .runtime-fonts/
 *.egg-info/
 build/
 dist/
+
+*.build/
+*.pdf.lock
