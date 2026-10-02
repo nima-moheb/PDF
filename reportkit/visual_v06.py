@@ -31,7 +31,7 @@ def _fa_digits(value) -> str:
 
 def _run_font(kind: str, run: str, font: str) -> str:
     has_fa_digits = any(("\u06f0" <= ch <= "\u06f9") or ("\u0660" <= ch <= "\u0669") for ch in run)
-    return font if has_fa_digits else ("Latin" if kind == "ltr" else font)
+    return font if has_fa_digits else (("LatinB" if font in ("FaB", "FaUI", "LatinB") else "Latin") if kind == "ltr" else font)
 
 
 def txt_width_v06(text, font, size, rtl=False):
@@ -148,7 +148,7 @@ def _localized_cover_single_line(c, text, x, y, width, *args, **kwargs):
 
 def cover_v06(c, meta, p, th):
     rtl = p.get("direction") == "rtl" or (
-        p.get("direction") != "ltr" and e.is_fa(p.get("title", meta.get("title", "")))
+        p.get("direction") != "ltr" and (meta.get("language") == "fa" or (not meta.get("language") and e.is_fa(p.get("title", meta.get("title", "")))))
     )
     if not rtl:
         return _ORIG["cover"](c, meta, p, th)
@@ -192,7 +192,7 @@ def _index_badge(c, text, x, y, w, h, th, rtl=False):
 def summary_v06(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Overview"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Overview")), th)
     rtl_page = e.is_fa(p["title"])
 
     intro_h = 42 * e.MM
@@ -230,7 +230,7 @@ def summary_v06(c, meta, p, th, page):
 def comparison_v06(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Comparison"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Comparison")), th)
     items=p["items"]; rtl_page=e.is_fa(p["title"])
     gap=5*e.MM; bottom=31*e.MM
     w=(e.W-2*e.SAFE_X-gap*(len(items)-1))/len(items); h=y-bottom

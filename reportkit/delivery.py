@@ -1,137 +1,58 @@
+"""Check the emitted file, source identity, embedded fonts and exact page counters."""
 from __future__ import annotations
-
 import json
 import re
 import unicodedata
 from pathlib import Path
-
 import fitz
-
-_PERSIAN_RE = re.compile(r"[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]")
-_PERSIAN_DIGIT_RE = re.compile(r"[۰-۹]")
-_ASCII_DIGIT_RE = re.compile(r"[0-9]")
+from pypdf import PdfReader
+from .contract import language, load_config, source_identity, validate_config
 
 
-def _contains_persian(value) -> bool:
-    if isinstance(value, str):
-        return bool(_PERSIAN_RE.search(value))
-    if isinstance(value, dict):
-        return any(_contains_persian(v) for v in value.values())
-    if isinstance(value, (list, tuple)):
-        return any(_contains_persian(v) for v in value)
-    return False
-
-
-def _footer_text(page: fitz.Page) -> str:
-    cutoff = page.rect.height - 90
-    parts = []
-    for block in page.get_text("dict").get("blocks", []):
-        for line in block.get("lines", []):
-            for span in line.get("spans", []):
-                if float(span["bbox"][1]) >= cutoff:
-                    parts.append(str(span.get("text", "")))
-    return " ".join(parts)
-
-
-def _font_names(doc: fitz.Document):
-    out = set()
-    for page in doc:
-        for font in page.get_fonts(full=True):
-            if len(font) > 3 and font[3]:
-                out.add(str(font[3]))
-    return sorted(out)
-
-
-def verify_delivery(
-    pdf_path,
-    config=None,
-    *,
-    expected_engine_version: str | None = None,
-    allow_test_font_fallback: bool = False,
-):
-    """Hard delivery gate for finished PDFs.
-
-    This intentionally validates the emitted PDF, not only source/config state.
-    A file that bypasses Nima Report Engine, leaks control glyphs, uses an
-    unapproved Persian fallback font, or loses page-counter digits must fail.
-    """
-    pdf_path = Path(pdf_path)
-    if not pdf_path.exists():
-        raise RuntimeError(f"DELIVERY_FAIL: PDF does not exist: {pdf_path}")
-
-    cfg = config
-    if isinstance(config, (str, Path)):
-        cfg = json.loads(Path(config).read_text(encoding="utf-8"))
-
-    doc = fitz.open(pdf_path)
-    meta = doc.metadata or {}
-    producer = str(meta.get("producer") or "")
-    errors = []
-
-    if not producer.startswith("Nima Report Engine "):
-        errors.append("missing Nima Report Engine producer metadata")
-    if expected_engine_version and producer != f"Nima Report Engine {expected_engine_version}":
-        errors.append(
-            f"engine provenance mismatch: expected {expected_engine_version}, got {producer or '<blank>'}"
-        )
-
-    extracted_pages = [page.get_text() or "" for page in doc]
-    extracted = "\n".join(extracted_pages)
-    for ch in extracted:
-        if ch == "\x00":
-            errors.append("final PDF contains NUL/missing-glyph characters")
-            break
-        if ch == "\ufffd":
-            errors.append("final PDF contains Unicode replacement glyphs")
-            break
-        if unicodedata.category(ch) == "Cf":
-            errors.append(
-                f"final PDF leaks Unicode format-control glyph U+{ord(ch):04X}"
-            )
-            break
-
-    persian = _contains_persian(cfg) if cfg is not None else bool(_PERSIAN_RE.search(extracted))
-    fonts = _font_names(doc)
-    if persian:
-        approved_persian = any(
-            ("Vazirmatn" in name) or ("DejaVuSans" in name)
-            for name in fonts
-        )
-        if not approved_persian and not allow_test_font_fallback:
-            errors.append(
-                "Persian production PDF does not embed an approved Persian sans "
-                "(Vazirmatn or validated DejaVu Sans)"
-            )
-        bad_arabic = [
-            name for name in fonts
-            if "NotoSansArabic" in name or "NotoNaskhArabic" in name
-        ]
-        if bad_arabic and not allow_test_font_fallback:
-            errors.append(
-                "unapproved Persian fallback font embedded: " + ", ".join(sorted(bad_arabic))
-            )
-
-    # Cover page intentionally has no page number. Pages 2+ must have an actual
-    # counter in the footer; the broken JaneDel PDF rendered only 'صفحه از'.
-    for idx, page in enumerate(doc):
-        if idx == 0:
-            continue
-        footer = _footer_text(page)
-        digits = _PERSIAN_DIGIT_RE.findall(footer) if persian else _ASCII_DIGIT_RE.findall(footer)
-        if len(digits) < 2:
-            errors.append(
-                f"page {idx+1} footer/page counter is missing rendered digits"
-            )
-            break
-
-    if errors:
-        raise RuntimeError("DELIVERY_FAIL:\n- " + "\n- ".join(errors))
-
-    return {
-        "pdf": str(pdf_path),
-        "producer": producer,
-        "pages": doc.page_count,
-        "persian": persian,
-        "fonts": fonts,
-        "status": "PASS",
-    }
+def verify_delivery(pdf_path, config=None, *, expected_engine_version=None, allow_test_font_fallback=False):
+    # Kept as a compatibility argument; it no longer bypasses production gates.
+    pdf_path=Path(pdf_path)
+    if not pdf_path.is_file(): raise RuntimeError(f'DELIVERY_FAIL: missing {pdf_path}')
+    cfg=load_config(config) if isinstance(config,(str,Path)) else config
+    errors=[]
+    raw=PdfReader(pdf_path).metadata or {}
+    producer=str(raw.get('/Producer',''))
+    if not producer.startswith('Nima Report Engine '): errors.append('missing Nima Report Engine producer metadata')
+    if expected_engine_version and producer!=f'Nima Report Engine {expected_engine_version}': errors.append('engine version mismatch')
+    if raw.get('/ReportKitStatus')!='production': errors.append('preview or legacy output is not a verified production deliverable')
+    lang=raw.get('/ReportKitLanguage','en'); mode=raw.get('/ReportKitMode','report')
+    if cfg is not None:
+        validate_config(cfg)
+        base=Path(config).resolve().parent if isinstance(config,(str,Path)) else pdf_path.parent
+        if raw.get('/ReportKitSourceSHA256')!=source_identity(cfg,base): errors.append('source/config identity mismatch')
+        if language(cfg)!=lang: errors.append('language mismatch')
+        if cfg['meta'].get('mode','report')!=mode: errors.append('report mode mismatch')
+    from .presentation import counter_layout
+    from .engine import H
+    with fitz.open(pdf_path) as doc:
+        if not len(doc): errors.append('PDF has no pages')
+        if cfg and len(doc)!=len(cfg['pages']): errors.append('page count differs from source')
+        text='\n'.join(page.get_text() for page in doc)
+        for ch in text:
+            if ch in ('\x00','\ufffd') or unicodedata.category(ch)=='Cf':
+                errors.append(f'missing or control glyph U+{ord(ch):04X}'); break
+        fonts={font[3]:font[0] for page in doc for font in page.get_fonts(full=True)}
+        persian=bool(re.search(r'[\u0600-\u06ff\ufb50-\ufdff\ufe70-\ufeff]',text))
+        if persian:
+            if not any('Vazirmatn' in name for name in fonts): errors.append('Persian output must embed bundled Vazirmatn')
+            if any('NotoNaskh' in n or 'NotoSansArabic' in n or 'DejaVuSans' in n for n in fonts): errors.append('unapproved Persian fallback font')
+        for name,xref in fonts.items():
+            if 'Vazirmatn' in name or 'IBMPlex' in name:
+                if not doc.extract_font(xref)[3]: errors.append(f'font is not embedded: {name}')
+        if mode!='cover_showcase':
+            _,y,_,h,slots=counter_layout(lang)
+            for index,page in enumerate(doc,1):
+                if index==1: continue
+                for key,expected in (('page',index),('total',len(doc))):
+                    x,w=slots[key]
+                    value=page.get_text('text',clip=fitz.Rect(x,H-y-h,x+w,H-y)).strip()
+                    value=value.translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩','01234567890123456789'))
+                    if value!=str(expected): errors.append(f'page {index}: wrong {key} counter ({value!r}, expected {expected})')
+        if errors: raise RuntimeError('DELIVERY_FAIL:\n- '+'\n- '.join(errors))
+        return {'pdf':str(pdf_path),'producer':producer,'pages':len(doc),'persian':persian,
+                'fonts':sorted(fonts),'status':'PASS','source_sha256':raw.get('/ReportKitSourceSHA256')}

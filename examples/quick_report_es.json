@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "title": "Un informe más claro",
+    "theme": "blue",
+    "author": "Nima Moheb",
+    "recipient": "Cliente de ejemplo",
+    "language": "es"
+  },
+  "requirements": {
+    "required_page_ids": [
+      "summary",
+      "pricing"
+    ],
+    "protected_values": [
+      {
+        "page_id": "pricing",
+        "value": "1250.00"
+      },
+      {
+        "page_id": "pricing",
+        "value": "750.00"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "title": "Un informe más claro",
+      "subtitle": "Un resumen útil, precios explícitos y revisiones independientes por página.",
+      "variant": "glass-panel"
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "title": "Lo que necesita saber",
+      "intro": "Este ejemplo muestra cómo un informe breve puede facilitar una decisión. El resumen explica el alcance, la página de precios identifica la moneda y el cierre propone un siguiente paso concreto. Las cifras que aparecen aquí pertenecen únicamente a esta demostración.",
+      "cards": [
+        {
+          "label": "Idiomas",
+          "value": "3",
+          "note": "Español, inglés y persa"
+        },
+        {
+          "label": "Páginas",
+          "value": "4",
+          "note": "Un propósito para cada página"
+        },
+        {
+          "label": "Moneda",
+          "value": "EUR",
+          "note": "Sin conversión implícita"
+        },
+        {
+          "label": "Fuente editable",
+          "value": "1",
+          "note": "Un informe que se puede revisar"
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "type": "pricing",
+      "title": "Alcance y precio",
+      "intro": "Precios ilustrativos de esta demostración. Cada servicio tiene una cantidad y un precio unitario explícitos.",
+      "currency": "EUR",
+      "items": [
+        {
+          "description": "Planificación y estructura del informe",
+          "quantity": "1",
+          "unit_price": "1250.00"
+        },
+        {
+          "description": "Diseño y preparación",
+          "quantity": "1",
+          "unit_price": "750.00"
+        }
+      ],
+      "expected_total": "2000.00",
+      "note": "Estas cifras son ejemplos y no constituyen una oferta comercial. No se han añadido impuestos ni gastos externos. Un presupuesto real debe reflejar los importes y condiciones acordados."
+    },
+    {
+      "id": "closing",
+      "type": "closing",
+      "title": "El siguiente paso",
+      "text": "Revise el alcance y la moneda antes de aprobar un informe real. Si una página necesita un cambio, indique su número y describa la corrección. Las demás páginas conservan el contenido y el diseño aceptados."
+    }
+  ]
+}

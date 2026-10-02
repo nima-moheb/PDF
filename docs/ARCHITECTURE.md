@@ -1,66 +1,42 @@
-# Architecture
+# Architecture — 0.7
 
-`report.json -> strict schema -> semantic validation -> public scrub -> dependency fingerprints -> independent page render -> deterministic page hashes -> merge -> link checks -> render/preflight QA`
+`JSON → semantic validation → dependency fingerprints → independent pages → merge → final-page QA → density/delivery checks → accepted PDF and bundle`
 
-## Determinism
+## Boundaries
 
-ReportLab pages are generated in invariant mode. The final writer receives fixed metadata. Two clean builds from the same input and runtime contract are regression-tested for byte-identical page artifacts and merged PDFs.
+- `contract.py`: strict JSON, readable errors, explicit language, required/protected content and source identity.
+- `pricing.py`: exact decimal totals and the semantic pricing component.
+- `fonts.py`: packaged licensed fonts, checksum/coverage validation and font-byte fingerprints.
+- `presentation.py`: current language context, page chrome, closing page and glyph checks. Approved existing geometry lives in `engine.py` and the historical `visual_v05/v06/v062` component modules.
+- `pipeline.py`: the single public build transaction. Historical build wrappers are not the public execution path.
+- `qa.py`: final merged page text/size checks and verified PNG rendering/reuse.
+- `delivery.py`: producer/version, source digest, production status, fonts, glyphs, exact page/current-total counters.
+- `cli.py`: chat-facing commands and strict page replacement from the accepted source.
 
-## Surgical rebuilds
+## Determinism and reuse
 
-Each page is an independent artifact under `pages/`. `manifest.json` stores:
+A global fingerprint includes metadata, page order/IDs, content requirements, Python and dependency versions, bidi backend/version, font bytes, renderer code, schema and themes. Each page has a semantic fingerprint and artifact hash. Evidence is copied into a portable bundle with a content-hashed name.
 
-- global fingerprint: metadata + ordered page structure + renderer/schema/theme/runtime contract
-- per-page input fingerprint
-- evidence image SHA-256 where applicable
-- artifact SHA-256
+Default builds reuse unchanged artifacts automatically. An ordinary `--only ID` expands when another page changed and forces a full build for shared changes. `--strict-only` aborts instead. Changing a page's interior archetype can remain local; changing its position, page count, recipient, language or theme is global.
 
-With `--only PAGE_ID`:
+Final merged pages are reopened on every build. A prior PNG can be reused only when its own hash, single-page artifact hash, final merged page serialization (including resources), and QA/runtime contract match. Other pages are rendered again. This keeps validation at the final file boundary without repeatedly rasterizing unchanged pages.
 
-1. A changed global/runtime/structural fingerprint invalidates reuse and causes a full rebuild.
-2. A changed non-requested page or evidence file is automatically added to the render set.
-3. A missing/tampered artifact is automatically rebuilt.
-4. Unaffected artifacts remain byte-identical.
+## Transaction and concurrency
 
-## Final boundary QA
+Each output has its own `<stem>.build` folder and OS advisory lock. Locks are released by the OS after a process exits; stable lock files are harmless. A process-wide lock serializes legacy component globals. Distinct processes can build distinct reports concurrently.
 
-After merge, PyMuPDF opens and renders every final page at 2x resolution. The preflight validates page count, A4 dimensions, renderability, non-blank raster output, extractable text, and text boxes staying inside the media box. PNGs and hashes are retained under `qa/` for human or future visual-regression inspection.
+Builds write a temporary candidate next to the output. The final PDF is replaced only after all requested gates pass. Ordinary errors also restore the prior bundle. A process crash between bundle/PDF replacements is detected by digest mismatch; a strict edit then refuses reuse. This is not a cross-file, power-loss-atomic database transaction.
 
-## Failure over fakery
+Page replacement starts from accepted `source.json`, requires the same stable ID, validates against the prior source digest to avoid lost updates, and confirms unchanged page hashes. A failed edit leaves both source and PDF unchanged. Report bundles carry images so source identity survives moving the folder.
 
-The build fails on malformed archetype content, banned internal text, missing evidence, overflow/fit violations, dead visible resume links, malformed table/chart data, or failed rendered QA. Normal content is never silently sliced to fit.
+## Delivery claims and limits
 
-## Visual regression workflow
+The standard CLI `verify` checks build/QA receipts and the final file. The Python file verifier checks source identity when supplied a source. These are integrity and rendering checks, not cryptographic authorship authentication, factual verification, accessibility certification, or a substitute for visual review.
 
-Cover comparison fixtures live in `examples/cover_showcase_en.json` and `examples/cover_showcase_fa.json`. They are rendered by the same production cover renderer and are not mockups or exported images. Visual changes must be verified by building these fixtures plus `examples/client_report.json` and rendering the resulting PDFs.
-The five cover variants are production code paths, not temporary experiments. The Persian fixture must also verify localized author identity (`نیما محب`) while exercising the exact same variant implementations in RTL mode.
+Preview output is explicitly marked and cannot pass delivery. Internal-test environment variables no longer bypass production rules. Unsupported glyphs fail rather than silently becoming squares.
 
+The engine supports English, Persian and Spanish chrome. The chat owns the content's language, relevance, factual accuracy and reader suitability. Every new report needs a human/assistant visual review of rendered pages; local edits need review of changed pages.
 
-## v0.5 visual acceptance stage
+## Testing
 
-The public package installs `reportkit.visual_v05` over the stable v0.4 semantic renderer. The layer owns text normalization, production Persian font gating, adaptive density composition, RTL chrome mirroring, paragraph justification, and post-build density QA.
-
-After ordinary merged-PDF render QA succeeds, v0.5 performs a semantic density pass using the known page archetypes. Pages that are technically valid but visually abandon the lower sheet fail with `QA_DENSITY_FAIL`. This turns the real-world "two-thirds empty" failure into a reproducible build error rather than a subjective review note.
-
-## v0.6 final-glyph layer
-
-`reportkit.visual_v06` is installed after v0.5. Its most important boundary is between bidi shaping and ReportLab glyph drawing: semantic controls such as ZWNJ are allowed to influence shaping, then Unicode format controls are stripped from the final visual runs before width calculation and drawing. This prevents viewer-specific control-glyph artifacts without destroying Persian word joining semantics.
-
-The same layer localizes RTL decorative chrome and owns the v0.6 summary/comparison visual components. Tests inspect the generated PDFs with PyMuPDF to assert that ZWNJ is absent from final extracted glyph text, Persian cover chrome contains no English engine labels, page chrome is localized, and summary metrics render at dominant size.
-
-## v0.6.1 delivery provenance boundary
-
-Rendered QA is followed by a second file-level delivery gate. It reopens the emitted PDF and verifies provenance metadata, glyph-stream cleanliness, Persian production fonts, and footer counters. The public `build` entry point cannot return a QA-enabled deliverable that fails this boundary.
-
-The runtime-contract fingerprint now includes `visual_v05.py`, `visual_v06.py`, `delivery.py`, and the v0.6.1 delivery wrapper, so surgical page reuse is invalidated when any of these visual/delivery rules change.
-
-This layer exists because a visually plausible PDF can still be the wrong artifact: an ad-hoc generator can omit engine metadata, use fallback fonts, leak ZWNJ as a visible dash, or lose numeric glyphs. Such a file must fail independently of its source JSON.
-
-
-## v0.6.2 adaptive semantic layout + offline font capability
-
-The Persian font selector validates actual cmap coverage instead of trusting filenames or requiring a network download. Valid local Vazirmatn is preferred; validated DejaVu Sans is the deterministic offline fallback. Broken/subset cached fonts are ignored.
-
-Summary and comparison semantic values are now shape-adaptive. Compact values can use circular medallions, while wider values are rendered inside responsive capsules with bounded wrapping/scaling. This removes the previous fixed-geometry failure mode where valid content such as `+۲۵ میلیون` or `API فروشگاه` caused `FIT_FAIL`.
-
-The runtime contract includes `visual_v062.py`, so surgical reuse is invalidated when these adaptive/font-capability rules change.
+Run `python -m unittest discover -s tests -v`. Meaningful regression boundaries include rollback after rendering/delivery failure, strict page isolation, corrupted caches, exact money, font changes, source mismatch, moved evidence and deterministic output. Build the cover showcases and affected real examples when changing geometry. No GitHub Actions dependency.

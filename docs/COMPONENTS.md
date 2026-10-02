@@ -7,6 +7,7 @@
 - `chart_text`: validated line/bar data plus bounded analysis and optional source.
 - `comparison`: up to three comparable semantic items.
 - `table`: 2-6 engine-sized columns; rows wrap and grow deterministically rather than truncate.
+- `pricing`: explicit currency, decimal quantity/unit-price strings, calculated total, optional discount/expected total and terms note.
 - `image_text`: required real image + explanation; relative asset paths resolve from report JSON.
 - `timeline`: up to six ordered steps.
 - `sources`: designed source cards/list.

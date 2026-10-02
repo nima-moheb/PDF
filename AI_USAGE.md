@@ -1,117 +1,92 @@
-# AI Usage Contract
+# Chat entry point — Nima Report Engine 0.7
 
-This repository is a report compiler. The AI supplies semantic content; the engine owns presentation and verification.
+Use this file and one matching example. Routine report generation does **not** require reading renderer source, all design documents, old reports, or the test suite.
 
-## Absolute rules
+## From a conversation to a report
 
-- A generated PDF is always a finished deliverable for another human.
-- Never include TODO, draft watermark, internal/manager/CEO note, debug text, placeholder text, prompt text, reasoning, generator commentary, or instructions to Nima.
-- Do not provide coordinates, font sizes, margins, colors, table widths, per-card accents, header/footer overrides, or chart styling in report JSON. The strict schema rejects them.
-- Select approved archetypes and provide content only.
-- Never shorten content by slicing/truncating fields to make them fit. A `FIT_FAIL` means shorten without losing meaning, split content into another page, or choose another approved archetype.
-- Missing evidence/screenshot assets are build failures. Never substitute decorative fake evidence.
-- Evidence paths may be relative to the report JSON.
-- Page 1 has no visible page number. Pages 2+ use deterministic engine-owned navigation/footer components.
-- Use `--only <page-id>` for local corrections. The engine verifies whether surgery is actually safe and expands/invalidates it automatically when dependencies changed.
-- Do not treat source generation as success. A successful default build must pass final merged-PDF rendered QA and produce the `qa/` artifacts.
+1. Use the current conversation's approved content and facts. Identify the recipient, purpose, language, required sections/patterns, prices/currency, and any exact wording. Ask only for a missing fact that would materially change the report. Never invent a price, result, date, or commitment.
+2. Start from `examples/quick_report_fa.json`, `quick_report_en.json`, or `quick_report_es.json`. Replace the demonstration content completely. Use `client_report.json` only for additional archetype examples.
+3. Set `meta.language` to `fa`, `en`, or `es`. The chat writes/translates the content; the engine localizes the chrome. Other languages require renderer/font verification before delivery. Set `meta.recipient` to the intended reader. Omit an unknown date instead of leaving a visible empty field.
+4. Keep content in semantic JSON. Choose page archetypes below and stable descriptive IDs. The engine owns coordinates, typography, colors, margins and fit. Preserve approved amounts, qualifiers, names and claims.
+5. Put non-negotiable page IDs and wording in `requirements`. Use `protected_values` for exact **whole field** values such as a price string or approved phrase. They prevent later edits from silently changing these values. Deliberate user changes to protected content require updating the relevant requirement in a full build.
+6. Run the build command. It validates content, renders, preflights and verifies the final PDF. Inspect the PNGs in the returned `qa` directory. For a local edit, inspect the changed pages; unchanged accepted pages are verified by hashes.
+7. Deliver the PDF through the chat's file-delivery mechanism. Persist the editable `.build` folder (or a packed ZIP) with it so another chat can perform a real page correction. An exported PDF alone does not contain the semantic source. Do not commit private client reports to this public repository.
 
-## Approved archetypes
+## Commands
 
-`cover`, `summary`, `text`, `cards`, `chart_text`, `comparison`, `table`, `image_text`, `timeline`, `sources`, `closing`.
-
-## Visual identity
-
-- A4 portrait, Modern Digital.
-- Themes: blue, green, purple, orange, red, graphite.
-- Latin: IBM Plex Sans when bootstrapped.
-- Persian: Vazirmatn when bootstrapped.
-- Mixed Persian/English/numbers/URLs must remain readable and atomic where appropriate.
-- Normal-page footers do not show a resume control. On a closing page, the visible `nima-moheb.github.io/myCV/` URL itself is the clickable PDF URI annotation.
-
-## Cover selection
-
-All five cover variants are permanent production templates. Choose the variant from the report's content and audience; do not mechanically default to one design and do not ask Nima to choose unless the request itself makes visual direction a meaningful decision.
-
-- `signal-orbit`: technical, analytical, performance, SEO, infrastructure, data-heavy, engineering.
-- `glass-panel`: executive, client-facing, business review, proposal, management summary, polished corporate delivery.
-- `aurora-strata`: innovation, AI, product, technology, future-facing, creative technical work.
-- `constellation`: strategy, research, roadmap, multi-source evidence, systems and connected findings.
-- `editorial-split`: formal research, finance, legal/policy-style material, evidence-heavy or document-centric reports.
-
-Theme is selected independently from the approved palettes: blue for general/technical, green for growth/operations, purple for innovation/creative work, orange for strategy/opportunity, red for risk/critical findings, graphite for formal/neutral material. These are selection heuristics, not rigid category locks.
-
-Every variant supports LTR and RTL. For Persian/RTL covers, Nima's displayed author identity is `نیما محب`; the renderer enforces this even if upstream metadata still contains `Nima Moheb`. `cover_showcase` mode exists only for engine-generated visual comparison PDFs. Ordinary reports contain exactly one cover.
-
-## Default ChatGPT report workflow
-
-When Nima asks for a report/PDF and provides the content or source material, this repository is the default production path:
-
-1. Convert the content into the semantic report JSON; do not hand-design coordinates or bypass the engine.
-2. Choose the cover variant and palette from the content, audience, seriousness, and visual tone using the guidance above.
-3. Choose the interior archetypes that best express the content. Add pages when needed instead of shrinking or truncating content.
-4. Use Persian/RTL mode when the report is Persian; keep mixed English, versions, percentages and URLs intact.
-5. Build through `build.py` with QA enabled. Source generation alone is not completion.
-6. Inspect the rendered QA pages when layout judgment matters and correct the report JSON/engine if necessary.
-7. Deliver the final engine-generated PDF. Do not substitute a one-off PDF made through a different rendering pipeline unless Nima explicitly asks to abandon this repo.
-
-
-## Real-report acceptance rules (v0.5)
-
-The 22 September 2026 Nika CRM English/Persian reports are regression evidence for the following non-negotiable rules:
-
-- A page is not successful merely because nothing overflows. For `summary`, `text`, `cards`, `comparison`, `timeline`, and `chart_text`, final QA enforces a minimum meaningful vertical content reach. Mostly-empty pages fail with `QA_DENSITY_FAIL` and must be recomposed.
-- Summary pages use a designed intro panel plus compact metric cards with dominant centered values. Do not place four small metrics at the top and leave the lower page blank.
-- Text/card pages distribute their components through the usable page field. Do not cap card expansion in a way that leaves the lower third or half unused.
-- English multi-line explanatory paragraphs are justified when appropriate. Short labels, card titles, notes, and Persian text are not force-justified.
-- Persian/RTL page chrome is mirrored: navigation marker/accent on the right, report identity on the right, page chip on the left. Interior titles are right-anchored with proper separation from eyebrows/navigation.
-- Persian source text is normalized before measurement/rendering. BOM/FEFF, directional marks, soft hyphens, and pasted bidi-isolate controls are stripped; semantic ZWNJ is preserved.
-- Persian typography is capability-gated, not network-gated. Prefer valid local Vazirmatn. If unavailable, the engine may use validated local DejaVu Sans/DejaVu Sans Bold only when those files contain the required Persian letters and Persian digits. Invalid/subset cached fonts and Naskh-style fallbacks remain rejected. `python scripts/bootstrap_fonts.py` is optional for preferred typography, not a prerequisite for offline generation.
-- Cover and paragraph wrapping includes widow control so a single short word is not stranded on a final line when a balanced reflow is possible.
-- Timeline geometry mirrors for RTL and uses the full page field; comparison cards also mirror bullets/badges and occupy the available content height.
-
-When a real report exposes a visual defect, fix the reusable renderer/archetype first and add a regression case. Do not patch the exported PDF by hand.
-
-- Long reports must not repeat one cards/text template page after page. v0.5 rejects more than two consecutive `cards` or `text` pages, and rejects those archetypes when either dominates more than 55% of an interior report. Re-architect the information using comparison, timeline, table, summary, chart, sources, or other appropriate approved archetypes.
-
-- For a substantial source report, an executive summary must synthesize the actual material rather than restating a generic product description. Use enough supported prose to explain the important findings (multiple short paragraphs when warranted), then use metrics/cards as reinforcement. Do not create a visually full page by inflating empty boxes around thin content.
-
-## Persian rendering acceptance rules (v0.6)
-
-- Semantic ZWNJ is preserved through shaping/wrapping, but all zero-width/control characters are removed from the final visual glyph runs. They must never appear as visible dashes/hairlines in the PDF.
-- Persian/RTL reports use Persian-only decorative chrome. Engine labels such as REPORT, DATA / INSIGHT / IMPACT, NIMA REPORT ENGINE, STRUCTURED / FINAL, PAGE, REPORT COMPLETE, and PORTFOLIO / RESUME are localized in RTL output. Intentional English terms that are part of the report content (for example CRM, Laravel, Applitent, URLs, product names) are preserved.
-- RTL page counters use Persian language and digits (`صفحه ۲ از ۶` style).
-- Summary metrics are primary visual anchors: large 36pt+ values, graphic metric medallions, and compact supporting labels/notes. Tiny numbers floating in oversized cards are not acceptable.
-- Three-way comparison/access-model pages use large Persian step numbers, a distinct value medallion, and bullets distributed through the card body rather than leaving the lower card empty.
-- Persian timeline step indices use Persian digits.
-
-## Mandatory delivery gate (v0.6.1)
-
-Before any PDF is handed to Nima or another human, the file itself must pass the repo delivery verifier:
+From a checkout of current `main`, with Python 3.11+ and the declared dependencies installed:
 
 ```bash
-python scripts/verify_delivery.py output/report.pdf --config report.json
+python -m pip install -e .
+python -m reportkit build examples/quick_report_fa.json output/example-fa.pdf
 ```
 
-This is mandatory even when the file visually looks acceptable.
+Fonts ship with the package. There is no font bootstrap, browser, API key, font-download step, or GitHub Actions run in routine generation. Reuse a working environment; install only if needed. `python -m reportkit doctor` checks versions and fonts when the environment is uncertain.
 
-The verifier rejects:
-- PDFs not produced by Nima Report Engine (missing producer/provenance metadata);
-- leaked Unicode format controls such as ZWNJ/ZWJ in the final glyph stream;
-- NUL/replacement glyphs;
-- Persian production PDFs that do not embed an approved capability-validated Persian sans (Vazirmatn preferred; DejaVu Sans allowed offline);
-- Persian PDFs that embed the Noto Arabic/Naskh fallback faces;
-- missing rendered footer/page-counter digits on pages 2+.
+Replace the example path with the actual authored report JSON. A successful command prints the PDF, editable source, PNG directory, changed/reused pages and measured build time. This duration excludes the chat's research and content-writing time. All fields in supplied examples are real, buildable demonstration data, **not** client facts.
 
-`REPORTKIT_INTERNAL_TEST=1` is reserved for the repo's automated tests. Never deliver an INTERNAL_TEST output. Normal production generation must pass the same glyph/provenance checks without special environment overrides.
+```bash
+python -m reportkit validate report.json
+python -m reportkit build report.json output/report.pdf
+python -m reportkit verify output/report.pdf --config report.json
+python -m reportkit inspect output/report.pdf
+python -m reportkit pack output/report.pdf output/report-editable.zip
+```
 
-Do not rename, copy, or post-process an ad-hoc PDF and call it repaired. If the verifier fails, regenerate through this repository and fix the actual failure.
+## “Change page two”
 
+Read `output/report.build/source.json` or run `inspect` to find page two's stable ID. Write a complete replacement **page object** to `replacement-page.json`, retaining that ID and the approved content not being changed. Then:
 
-## Adaptive semantic components (v0.6.2)
+```bash
+python -m reportkit edit output/report.pdf --page 2 --replacement replacement-page.json
+```
 
-- Decorative geometry must adapt to semantic content, never the reverse. Normal values such as `+۲۵ میلیون`, `حدود ۳ هفته`, `API فروشگاه`, or `WooCommerce API` are not valid reasons for `FIT_FAIL`.
-- Summary metrics automatically choose between compact circular medallions and wider metric capsules based on the value shape.
-- Comparison/access-model values use full-card adaptive capsules and may wrap to two centered lines at a readable floor.
-- Summary labels and notes may wrap within their cards instead of failing because a fixed single-line label is slightly wider in another Persian font.
-- `FIT_FAIL` is reserved for genuinely impossible semantic/page composition after adaptive layout has been exhausted, not for fixed decorative circles/pills.
-- Persian generation must remain offline-capable. Do not stop to download fonts when a validated approved local sans is available.
+Page numbers mean PDF viewer numbers, including the cover. A stable ID also works with `--page`. This command changes the saved semantic source only after the new PDF passes every gate. It rejects stale edits, changed shared dependencies, and any unrequested changed page. Untouched page PDFs and their verified PNGs remain byte-identical. There is no manual PDF patching or layout surgery.
+
+For intentional changes to recipient, theme, language, requirements, page count/order, or the engine version, edit the whole source and run `build`. It reports which pages it rebuilt. `build --only page-id` preserves the older automatic-expansion behavior; `--strict-only` makes this restriction a hard boundary.
+
+## Select content by purpose
+
+| Archetype | Use and content |
+|---|---|
+| `cover` | One title/subtitle and approved `variant`; first page, no number. |
+| `summary` | Supported narrative plus 1–4 meaningful metrics. |
+| `text` | Heading/text/bullets grouped into an explanation. |
+| `cards` | Up to six distinct ideas. |
+| `chart_text` | Real line/bar data with labels, analysis and source. |
+| `comparison` | Up to three comparable choices with values/bullets. |
+| `table` | 2–6 columns and up to 14 rows; never shorten cells to fit. |
+| `pricing` | Explicit currency, item descriptions, quantities, unit prices, optional discount/expected total/note. |
+| `image_text` | A real local image and explanation; asset paths are relative to the input JSON. |
+| `timeline` | Up to six ordered steps. |
+| `sources` | Up to twelve real source descriptions. |
+| `closing` | A useful next step and a clickable resume link. |
+
+Use the archetypes relevant to the request. Avoid repetitive cards/text across long reports. A concise report need not be stretched into many pages. A substantive source needs a substantive summary. Do not add unsupported prose merely to fill a page.
+
+Covers: `signal-orbit` for technical/data work; `glass-panel` for executive/client/proposal work; `aurora-strata` for product/innovation; `constellation` for research/strategy; `editorial-split` for formal/document-heavy work. All five support RTL. Choose a palette from blue, green, purple, orange, red, graphite without asking the user to make a routine design choice.
+
+## Pricing and preservation
+
+`pricing` requires decimal **strings**, e.g. `"quantity": "2"`, `"unit_price": "1250.00"`. Currency is explicit: `IRT` means toman, `IRR` means rial, plus `USD`, `EUR`, `GBP`. No implicit rial/toman or exchange conversion. Totals use decimal arithmetic; line totals round half up to the currency's minor unit. Toman/rial use whole units. An `expected_total` mismatch fails. No tax or fee is invented; agreed terms belong in the note, and complex tax calculations require an explicit supported model rather than silently assuming one.
+
+```json
+"requirements": {
+  "required_page_ids": ["pricing"],
+  "required_text": ["API فروشگاه"],
+  "forbidden_text": ["unapproved claim"],
+  "protected_values": [{"page_id": "pricing", "value": "25000000"}]
+}
+```
+
+Requirements validate the authored source and the final PDF is bound to that source's digest. They cannot prove that a factual claim is true or that a summary is relevant. The chat must still verify facts and review the content.
+
+## Failure handling
+
+- `FIT_FAIL`: names the page and component. Recompose or split while preserving meaning. Do not slice strings, delete qualifiers, shrink the whole PDF, or edit exported PDF bytes.
+- `PRICE_FAIL` / `REQUIREMENT_FAIL`: correct the source against approved facts; never remove a guard merely to make a build pass.
+- `GLYPH_FAIL`: use supported typography/text or extend and verify the font pipeline; never ship missing squares.
+- `SURGERY_FAIL` / `EDIT_CONFLICT`: the accepted baseline has changed. Inspect the precise change and use a full build only when that broader change is intended.
+- Failed builds preserve the previous accepted PDF and bundle. Debug `--preview` output is marked as such and fails delivery verification. Never deliver it.
+
+Persian uses bundled Vazirmatn, RTL chrome/column order and Persian page counters. ZWNJ participates in shaping and is removed from final glyph runs. Nima's Persian author name is «نیما محب». Intentional Latin terms, URLs, versions and exact values remain intact. No Naskh or system-font substitution.

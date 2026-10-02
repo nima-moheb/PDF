@@ -44,7 +44,7 @@ def clean_text(value) -> str:
     Invisible controls that produced visible hairlines/missing glyphs in real reports
     are stripped.
     """
-    text = unicodedata.normalize("NFC", str(value or "")).translate(_PERSIAN_CANONICALIZE).translate(_STRIP_CODEPOINTS)
+    text = unicodedata.normalize("NFC", str(value if value is not None else "")).translate(_PERSIAN_CANONICALIZE).translate(_STRIP_CODEPOINTS)
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     return "\n".join(re.sub(r"[\t\u00a0 ]+", " ", line).strip() for line in text.split("\n")).strip()
 
@@ -348,6 +348,8 @@ def _page_rtl(meta, p=None, title=None):
         return False
     if p and p.get("direction") == "rtl":
         return True
+    if meta.get("language"):
+        return meta["language"] == "fa"
     probe = title or (p or {}).get("title") or meta.get("title", "")
     return e.is_fa(probe)
 
@@ -506,7 +508,8 @@ def header_footer_v05(c, meta, page, page_title, th):
 def page_title_v05(c, title, eyebrow, th, y=e.H - 39 * e.MM):
     title = clean_text(title)
     eyebrow = clean_text(eyebrow)
-    rtl = e.is_fa(title) or e.is_fa(eyebrow)
+    from .presentation import LANGUAGE
+    rtl = LANGUAGE.get() == "fa" or e.is_fa(title) or e.is_fa(eyebrow)
     marker_y = y + 9.5 * e.MM
 
     if rtl:
@@ -595,7 +598,7 @@ def _soft_panel(c, x, y, w, h, th, alpha=0.70):
 def summary_v05(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Overview"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Overview")), th)
 
     intro_h = 43 * e.MM
     _soft_panel(c, e.SAFE_X, y - intro_h, e.W - 2 * e.SAFE_X, intro_h, th, 0.82)
@@ -626,7 +629,7 @@ def summary_v05(c, meta, p, th, page):
     w = (e.W - 2 * e.SAFE_X - gap * (cols - 1)) / cols
 
     for i, card in enumerate(cards):
-        col = i % cols
+        col = (cols - 1 - i % cols) if rtl_page else i % cols
         row = i // cols
         x = e.SAFE_X + col * (w + gap)
         yy = top - row * (h + gap) - h
@@ -675,7 +678,7 @@ def _group_content_height(group, tw):
 def text_page_v05(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Report"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Report")), th)
 
     groups = []
     current = {"title": "", "content": []}
@@ -771,7 +774,7 @@ def text_page_v05(c, meta, p, th, page):
 def cards_page_v05(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Highlights"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Highlights")), th)
 
     cards = p["cards"]
     gap = 6 * e.MM
@@ -787,7 +790,7 @@ def cards_page_v05(c, meta, p, th, page):
     rtl_page = _page_rtl(meta, p)
 
     for i, card in enumerate(cards):
-        col = i % cols
+        col = (cols - 1 - i % cols) if rtl_page else i % cols
         row = i // cols
         x = e.SAFE_X + col * (w + gap)
         yy = top - row * (h + gap) - h
@@ -832,7 +835,7 @@ def cards_page_v05(c, meta, p, th, page):
 def comparison_v05(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Comparison"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Comparison")), th)
 
     items = p["items"]
     rtl_page = _page_rtl(meta, p)
@@ -919,7 +922,7 @@ def comparison_v05(c, meta, p, th, page):
 def timeline_v05(c, meta, p, th, page):
     e.header_footer(c, meta, page, p["title"], th)
     e.tech_grid(c, th)
-    y = e.page_title(c, p["title"], p.get("eyebrow", "Timeline"), th)
+    y = e.page_title(c, p["title"], p.get("eyebrow", e.chrome("Timeline")), th)
 
     items = p["items"]
     rtl = _page_rtl(meta, p)
